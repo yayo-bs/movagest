@@ -1,0 +1,1 @@
+"""Blueprints funcionales de MovaGest."""
