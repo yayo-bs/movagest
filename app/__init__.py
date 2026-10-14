@@ -38,8 +38,10 @@ def create_app(configuracion=None):
     from app import models
     from app.blueprints.auth import bp as auth_bp
     from app.blueprints.main import bp as main_bp
+    from app.comandos import registrar_comandos
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
+    registrar_comandos(app)
 
     return app
