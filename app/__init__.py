@@ -6,7 +6,7 @@ from flask import Flask
 load_dotenv()
 
 from app.config import CONFIGURACIONES
-from app.extensions import csrf, db
+from app.extensiones import csrf, db, login_manager
 
 
 def create_app(configuracion=None):
@@ -29,8 +29,10 @@ def create_app(configuracion=None):
         app.config.from_object(configuracion)
 
     db.init_app(app)
+    login_manager.init_app(app)
     csrf.init_app(app)
 
+    from app import models
     from app.blueprints.auth import bp as auth_bp
     from app.blueprints.main import bp as main_bp
 
