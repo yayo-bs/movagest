@@ -23,6 +23,16 @@ body {
     text-decoration: none;
 }
 
+.cabecera nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.formulario-salida {
+    margin: 0;
+}
+
 .marca {
     font-size: 1.25rem;
     font-weight: 700;
@@ -43,4 +53,26 @@ body {
 
 .mensaje {
     border-left: 0.3rem solid #287a55;
+}
+
+.formulario {
+    max-width: 32rem;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    background: #fff;
+}
+
+.campo {
+    display: grid;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+}
+
+.campo input {
+    padding: 0.6rem;
+}
+
+.error {
+    margin: 0;
+    color: #a12622;
 }

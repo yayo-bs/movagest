@@ -11,6 +11,16 @@
         <a class="marca" href="{{ url_for('main.inicio') }}">MovaGest</a>
         <nav aria-label="Navegación principal">
             <a href="{{ url_for('main.inicio') }}">Inicio</a>
+            {% if current_user.is_authenticated %}
+                <span>{{ current_user.nombre }}</span>
+                <form class="formulario-salida" method="post" action="{{ url_for('auth.logout') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit">Salir</button>
+                </form>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}">Entrar</a>
+                <a href="{{ url_for('auth.registro') }}">Solicitar alta</a>
+            {% endif %}
         </nav>
     </header>
 

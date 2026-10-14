@@ -30,6 +30,9 @@ def create_app(configuracion=None):
 
     db.init_app(app)
     login_manager.init_app(app)
+    login_manager.login_view = "auth.login"
+    login_manager.login_message = "Inicia sesión para acceder a esta página."
+    login_manager.login_message_category = "info"
     csrf.init_app(app)
 
     from app import models
