@@ -58,6 +58,20 @@ class Usuario(UserMixin, db.Model):
         """Indica si la cuenta está aprobada y activa."""
         return self.estado == "activo"
 
+    def aprobar(self):
+        """Activa la cuenta si todavía está pendiente de aprobación."""
+        if self.estado != "pendiente":
+            return False
+        self.estado = "activo"
+        return True
+
+    def rechazar(self):
+        """Rechaza la cuenta si todavía está pendiente de aprobación."""
+        if self.estado != "pendiente":
+            return False
+        self.estado = "rechazado"
+        return True
+
 
 @login_manager.user_loader
 def cargar_usuario(id_usuario):

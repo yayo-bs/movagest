@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block titulo %}Altas pendientes | MovaGest{% endblock %}
+
+{% block contenido %}
+    <section>
+        <h1>Altas pendientes</h1>
+        {% if usuarios %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Apellidos</th>
+                        <th>Correo electrónico</th>
+                        <th>Fecha de solicitud</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in usuarios %}
+                        <tr>
+                            <td>{{ usuario.nombre }}</td>
+                            <td>{{ usuario.apellidos }}</td>
+                            <td>{{ usuario.email }}</td>
+                            <td>{{ usuario.fecha_alta.strftime("%d/%m/%Y %H:%M") }}</td>
+                            <td>
+                                <form method="post" action="{{ url_for('admin.aprobar_alta', id_usuario=usuario.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit">Aprobar</button>
+                                </form>
+                                <form method="post" action="{{ url_for('admin.rechazar_alta', id_usuario=usuario.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit">Rechazar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No hay solicitudes pendientes.</p>
+        {% endif %}
+    </section>
+{% endblock %}

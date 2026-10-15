@@ -36,12 +36,14 @@ def create_app(configuracion=None):
     csrf.init_app(app)
 
     from app import models
+    from app.blueprints.admin import bp as admin_bp
     from app.blueprints.auth import bp as auth_bp
     from app.blueprints.main import bp as main_bp
     from app.comandos import registrar_comandos
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
+    app.register_blueprint(admin_bp)
     registrar_comandos(app)
 
     return app

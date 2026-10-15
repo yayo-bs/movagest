@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block titulo %}Mi inicio | MovaGest{% endblock %}
+
+{% block contenido %}
+    <section class="bienvenida">
+        <h1>Hola, {{ usuario.nombre }}</h1>
+        <p>Has iniciado sesión en MovaGest.</p>
+    </section>
+{% endblock %}

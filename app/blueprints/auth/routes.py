@@ -98,7 +98,7 @@ def logout():
     return redirect(url_for("main.inicio"))
 
 
-@bp.get("/panel")
+@bp.get("/inicio")
 @login_required
-def panel():
-    return f"Hola, {current_user.nombre}"
+def inicio_socio():
+    return render_template("auth/inicio.html", usuario=current_user)

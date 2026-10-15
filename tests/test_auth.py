@@ -46,7 +46,7 @@ def test_registro_crea_usuario_pendiente_sin_iniciar_sesion(cliente):
     )
     assert usuario.rol == "socio"
     assert usuario.estado == "pendiente"
-    assert cliente.get("/auth/panel").status_code == 302
+    assert cliente.get("/auth/inicio").status_code == 302
 
 
 def test_registro_rechaza_email_duplicado(cliente):
@@ -81,19 +81,19 @@ def test_login_de_usuario_activo(cliente):
 
     assert respuesta.status_code == 302
     assert respuesta.headers["Location"].endswith("/")
-    assert cliente.get("/auth/panel").data == b"Hola, Ana"
+    assert b"Hola, Ana" in cliente.get("/auth/inicio").data
 
 
 def test_login_redirige_a_ruta_interna_solicitada(cliente):
     crear_usuario()
 
     respuesta = cliente.post(
-        "/auth/login?next=/auth/panel",
+        "/auth/login?next=/auth/inicio",
         data={"email": "persona@example.com", "password": "clave-segura-123"},
     )
 
     assert respuesta.status_code == 302
-    assert respuesta.headers["Location"].endswith("/auth/panel")
+    assert respuesta.headers["Location"].endswith("/auth/inicio")
 
 
 @pytest.mark.parametrize(
@@ -114,7 +114,7 @@ def test_login_bloquea_estado_no_activo(cliente, estado, mensaje):
 
     assert respuesta.status_code == 200
     assert mensaje.encode() in respuesta.data
-    assert cliente.get("/auth/panel").status_code == 302
+    assert cliente.get("/auth/inicio").status_code == 302
 
 
 def test_login_con_contrasena_incorrecta_no_revela_si_existe(cliente):
@@ -128,7 +128,7 @@ def test_login_con_contrasena_incorrecta_no_revela_si_existe(cliente):
 
     assert "Correo electrónico o contraseña incorrectos.".encode() in respuesta.data
     assert b"pendiente" not in respuesta.data
-    assert cliente.get("/auth/panel").status_code == 302
+    assert cliente.get("/auth/inicio").status_code == 302
 
 
 def test_login_con_email_inexistente_usa_mensaje_generico(cliente):
@@ -141,11 +141,11 @@ def test_login_con_email_inexistente_usa_mensaje_generico(cliente):
     assert "Correo electrónico o contraseña incorrectos.".encode() in respuesta.data
 
 
-def test_panel_sin_sesion_redirige_a_login(cliente):
-    respuesta = cliente.get("/auth/panel")
+def test_inicio_socio_sin_sesion_redirige_a_login(cliente):
+    respuesta = cliente.get("/auth/inicio")
 
     assert respuesta.status_code == 302
-    assert "/auth/login?next=%2Fauth%2Fpanel" in respuesta.headers["Location"]
+    assert "/auth/login?next=%2Fauth%2Finicio" in respuesta.headers["Location"]
     assert b"Inicia sesi\xc3\xb3n" in cliente.get(
         respuesta.headers["Location"]
     ).data
@@ -163,7 +163,7 @@ def test_logout_cierra_sesion_y_solo_acepta_post(cliente):
 
     assert respuesta.status_code == 302
     assert respuesta.headers["Location"].endswith("/")
-    assert cliente.get("/auth/panel").status_code == 302
+    assert cliente.get("/auth/inicio").status_code == 302
 
 
 @pytest.mark.parametrize(
