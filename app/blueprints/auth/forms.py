@@ -1,3 +1,8 @@
+"""Formularios para solicitar un alta y acceder a una cuenta.
+
+Flask-WTF valida los campos y protege los envíos con CSRF.
+"""
+
 from flask_wtf import FlaskForm
 from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired, EqualTo, Length

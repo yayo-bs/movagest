@@ -1,20 +1,12 @@
+"""Pruebas del alta y la autenticación de usuarios.
+
+Cubren el acceso, estados de aprobación y protección de sesión.
+"""
+
 import pytest
 
 from app.extensiones import db
 from app.models import Usuario
-
-
-def crear_usuario(email="persona@example.com", estado="activo"):
-    usuario = Usuario(
-        nombre="Ana",
-        apellidos="Pérez",
-        email=email,
-        estado=estado,
-    )
-    usuario.establecer_password("clave-segura-123")
-    db.session.add(usuario)
-    db.session.commit()
-    return usuario
 
 
 def datos_registro(**cambios):
@@ -49,8 +41,8 @@ def test_registro_crea_usuario_pendiente_sin_iniciar_sesion(cliente):
     assert cliente.get("/auth/inicio").status_code == 302
 
 
-def test_registro_rechaza_email_duplicado(cliente):
-    crear_usuario()
+def test_registro_rechaza_email_duplicado(cliente, crear_usuario):
+    crear_usuario(estado="activo")
 
     respuesta = cliente.post(
         "/auth/registro",
@@ -71,8 +63,8 @@ def test_registro_rechaza_contrasenas_distintas(cliente):
     assert "Las contraseñas deben coincidir.".encode() in respuesta.data
 
 
-def test_login_de_usuario_activo(cliente):
-    crear_usuario()
+def test_login_de_usuario_activo(cliente, crear_usuario):
+    crear_usuario(estado="activo")
 
     respuesta = cliente.post(
         "/auth/login",
@@ -84,8 +76,8 @@ def test_login_de_usuario_activo(cliente):
     assert b"Hola, Ana" in cliente.get("/auth/inicio").data
 
 
-def test_login_redirige_a_ruta_interna_solicitada(cliente):
-    crear_usuario()
+def test_login_redirige_a_ruta_interna_solicitada(cliente, crear_usuario):
+    crear_usuario(estado="activo")
 
     respuesta = cliente.post(
         "/auth/login?next=/auth/inicio",
@@ -103,7 +95,7 @@ def test_login_redirige_a_ruta_interna_solicitada(cliente):
         ("rechazado", "Tu solicitud de alta ha sido rechazada."),
     ],
 )
-def test_login_bloquea_estado_no_activo(cliente, estado, mensaje):
+def test_login_bloquea_estado_no_activo(cliente, crear_usuario, estado, mensaje):
     crear_usuario(estado=estado)
 
     respuesta = cliente.post(
@@ -117,8 +109,10 @@ def test_login_bloquea_estado_no_activo(cliente, estado, mensaje):
     assert cliente.get("/auth/inicio").status_code == 302
 
 
-def test_login_con_contrasena_incorrecta_no_revela_si_existe(cliente):
-    crear_usuario()
+def test_login_con_contrasena_incorrecta_no_revela_si_existe(
+    cliente, crear_usuario
+):
+    crear_usuario(estado="activo")
 
     respuesta = cliente.post(
         "/auth/login",
@@ -151,8 +145,8 @@ def test_inicio_socio_sin_sesion_redirige_a_login(cliente):
     ).data
 
 
-def test_logout_cierra_sesion_y_solo_acepta_post(cliente):
-    crear_usuario()
+def test_logout_cierra_sesion_y_solo_acepta_post(cliente, crear_usuario):
+    crear_usuario(estado="activo")
     cliente.post(
         "/auth/login",
         data={"email": "persona@example.com", "password": "clave-segura-123"},
@@ -170,8 +164,8 @@ def test_logout_cierra_sesion_y_solo_acepta_post(cliente):
     "destino",
     ["https://externo.example", "//externo.example/ruta", "/\\externo.example"],
 )
-def test_login_rechaza_redireccion_externa(cliente, destino):
-    crear_usuario()
+def test_login_rechaza_redireccion_externa(cliente, crear_usuario, destino):
+    crear_usuario(estado="activo")
 
     respuesta = cliente.post(
         f"/auth/login?next={destino}",

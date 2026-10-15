@@ -7,28 +7,14 @@ from app.extensiones import db
 from app.models import Usuario
 
 
-def crear_usuario(email, rol="socio", estado="pendiente"):
-    usuario = Usuario(
-        nombre="Ana",
-        apellidos="Pérez",
-        email=email,
-        rol=rol,
-        estado=estado,
-    )
-    usuario.establecer_password("clave-segura-123")
-    db.session.add(usuario)
-    db.session.commit()
-    return usuario
-
-
 def iniciar_sesion(cliente, usuario):
     with cliente.session_transaction() as sesion:
         sesion["_user_id"] = str(usuario.id)
         sesion["_fresh"] = True
 
 
-def test_socio_recibe_403_en_lista_de_altas(app, cliente):
-    socio = crear_usuario("socio@example.com", estado="activo")
+def test_socio_recibe_403_en_lista_de_altas(app, cliente, crear_usuario):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
     iniciar_sesion(cliente, socio)
 
     respuesta = cliente.get("/admin/altas")
@@ -43,11 +29,13 @@ def test_sin_sesion_se_redirige_al_login(cliente):
     assert "/auth/login?next=/admin/altas" in respuesta.headers["Location"]
 
 
-def test_administrador_ve_solicitudes_pendientes(cliente):
+def test_administrador_ve_solicitudes_pendientes(cliente, crear_usuario):
     administradora = crear_usuario(
-        "admin@example.com", rol="administrador", estado="activo"
+        email="admin@example.com", rol="administrador", estado="activo"
     )
-    pendiente = crear_usuario("pendiente@example.com")
+    pendiente = crear_usuario(
+        email="pendiente@example.com", estado="pendiente"
+    )
     iniciar_sesion(cliente, administradora)
 
     respuesta = cliente.get("/admin/altas")
@@ -59,11 +47,15 @@ def test_administrador_ve_solicitudes_pendientes(cliente):
     assert pendiente.estado == "pendiente"
 
 
-def test_aprobar_activa_usuario_y_permita_iniciar_sesion(app, cliente):
+def test_aprobar_activa_usuario_y_permita_iniciar_sesion(
+    app, cliente, crear_usuario
+):
     administradora = crear_usuario(
-        "admin@example.com", rol="administrador", estado="activo"
+        email="admin@example.com", rol="administrador", estado="activo"
     )
-    pendiente = crear_usuario("pendiente@example.com")
+    pendiente = crear_usuario(
+        email="pendiente@example.com", estado="pendiente"
+    )
     iniciar_sesion(cliente, administradora)
 
     respuesta = cliente.post(f"/admin/altas/{pendiente.id}/aprobar")
@@ -83,11 +75,13 @@ def test_aprobar_activa_usuario_y_permita_iniciar_sesion(app, cliente):
     assert b"Hola, Ana" in cliente_socio.get("/auth/inicio").data
 
 
-def test_rechazar_no_permite_iniciar_sesion(cliente):
+def test_rechazar_no_permite_iniciar_sesion(cliente, crear_usuario):
     administradora = crear_usuario(
-        "admin@example.com", rol="administrador", estado="activo"
+        email="admin@example.com", rol="administrador", estado="activo"
     )
-    pendiente = crear_usuario("pendiente@example.com")
+    pendiente = crear_usuario(
+        email="pendiente@example.com", estado="pendiente"
+    )
     iniciar_sesion(cliente, administradora)
 
     respuesta = cliente.post(f"/admin/altas/{pendiente.id}/rechazar")
@@ -109,11 +103,11 @@ def test_rechazar_no_permite_iniciar_sesion(cliente):
     assert cliente.get("/auth/inicio").status_code == 302
 
 
-def test_aprobar_usuario_no_pendiente_no_cambia_estado(cliente):
+def test_aprobar_usuario_no_pendiente_no_cambia_estado(cliente, crear_usuario):
     administradora = crear_usuario(
-        "admin@example.com", rol="administrador", estado="activo"
+        email="admin@example.com", rol="administrador", estado="activo"
     )
-    activo = crear_usuario("activo@example.com", estado="activo")
+    activo = crear_usuario(email="activo@example.com", estado="activo")
     iniciar_sesion(cliente, administradora)
 
     respuesta = cliente.post(f"/admin/altas/{activo.id}/aprobar", follow_redirects=True)
@@ -123,9 +117,9 @@ def test_aprobar_usuario_no_pendiente_no_cambia_estado(cliente):
     assert "La solicitud ya no está pendiente.".encode() in respuesta.data
 
 
-def test_alta_inexistente_responde_404(cliente):
+def test_alta_inexistente_responde_404(cliente, crear_usuario):
     administradora = crear_usuario(
-        "admin@example.com", rol="administrador", estado="activo"
+        email="admin@example.com", rol="administrador", estado="activo"
     )
     iniciar_sesion(cliente, administradora)
 

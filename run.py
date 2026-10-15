@@ -1,3 +1,8 @@
+"""Punto de entrada para ejecutar MovaGest en desarrollo.
+
+La aplicación se construye mediante la factory del paquete app.
+"""
+
 from app import create_app
 
 

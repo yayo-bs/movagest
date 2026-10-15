@@ -1,3 +1,8 @@
+"""Factory y configuración de la aplicación MovaGest.
+
+Registra extensiones, blueprints y comandos de la aplicación.
+"""
+
 import os
 
 from dotenv import load_dotenv
@@ -10,7 +15,6 @@ from app.extensiones import csrf, db, login_manager
 
 
 def create_app(configuracion=None):
-    """Crea y configura una instancia de la aplicación Flask."""
     app = Flask(__name__, instance_relative_config=True)
     os.makedirs(app.instance_path, exist_ok=True)
 
@@ -35,7 +39,6 @@ def create_app(configuracion=None):
     login_manager.login_message_category = "info"
     csrf.init_app(app)
 
-    from app import models
     from app.blueprints.admin import bp as admin_bp
     from app.blueprints.auth import bp as auth_bp
     from app.blueprints.main import bp as main_bp

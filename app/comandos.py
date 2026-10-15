@@ -1,6 +1,6 @@
 """Comandos CLI para preparar MovaGest en un entorno local.
 
-Incluye la creación de tablas y la configuración del primer administrador.
+Incluye tablas de desarrollo y la cuenta administradora inicial.
 """
 
 import click

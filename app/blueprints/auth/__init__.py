@@ -1,3 +1,8 @@
+"""Blueprint de autenticación y páginas personales.
+
+Registra rutas para solicitar el alta, entrar y cerrar sesión.
+"""
+
 from flask import Blueprint
 
 

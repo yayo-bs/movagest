@@ -1,6 +1,6 @@
 """Rutas administrativas para revisar solicitudes de alta.
 
-Las decisiones de cambio de estado se delegan al modelo Usuario.
+Las acciones de aprobación y rechazo se delegan al modelo Usuario.
 """
 
 from flask import abort, flash, redirect, render_template, url_for
@@ -14,7 +14,6 @@ from app.models import Usuario
 @bp.get("/altas")
 @solo_administradores
 def listar_altas():
-    """Muestra las solicitudes de alta pendientes de revisión."""
     usuarios = db.session.scalars(
         db.select(Usuario)
         .where(Usuario.estado == "pendiente")
@@ -26,7 +25,6 @@ def listar_altas():
 @bp.post("/altas/<int:id_usuario>/aprobar")
 @solo_administradores
 def aprobar_alta(id_usuario):
-    """Aprueba una solicitud pendiente y vuelve al listado."""
     usuario = db.session.get(Usuario, id_usuario)
     if usuario is None:
         abort(404)
@@ -42,7 +40,6 @@ def aprobar_alta(id_usuario):
 @bp.post("/altas/<int:id_usuario>/rechazar")
 @solo_administradores
 def rechazar_alta(id_usuario):
-    """Rechaza una solicitud pendiente y vuelve al listado."""
     usuario = db.session.get(Usuario, id_usuario)
     if usuario is None:
         abort(404)

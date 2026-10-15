@@ -1,6 +1,6 @@
 """Pruebas de los comandos CLI de MovaGest.
 
-Comprueban la inicialización de tablas y la creación del primer administrador.
+Verifican tablas repetibles y la creación del primer administrador.
 """
 
 from sqlalchemy import inspect
@@ -42,17 +42,13 @@ def test_crear_admin_crea_administrador_activo(app):
     assert "clave-segura" not in resultado.output
 
 
-def test_crear_admin_con_email_existente_no_duplica(app):
-    existente = Usuario(
-        nombre="Ana",
-        apellidos="Pérez",
+def test_crear_admin_con_email_existente_no_duplica(app, crear_usuario):
+    crear_usuario(
         email="admin@example.com",
         rol="administrador",
         estado="activo",
+        contrasena="clave-segura",
     )
-    existente.establecer_password("clave-segura")
-    db.session.add(existente)
-    db.session.commit()
 
     resultado = app.test_cli_runner().invoke(
         args=["crear-admin"],

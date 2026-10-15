@@ -1,3 +1,8 @@
+"""Configuraciones de ejecución para desarrollo y pruebas.
+
+Los valores sensibles y la conexión de desarrollo se leen del entorno.
+"""
+
 import os
 
 

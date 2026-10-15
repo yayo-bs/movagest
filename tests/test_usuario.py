@@ -1,3 +1,8 @@
+"""Pruebas del modelo Usuario.
+
+Comprueban sus validaciones, permisos y tratamiento de contraseñas.
+"""
+
 from datetime import timezone
 
 import pytest
@@ -5,12 +10,6 @@ from sqlalchemy.exc import IntegrityError
 
 from app.extensiones import db
 from app.models import Usuario
-
-
-def crear_usuario(email="socia@example.com", **datos):
-    usuario = Usuario(email=email, password_hash="hash-de-prueba", **datos)
-    db.session.add(usuario)
-    return usuario
 
 
 def test_password_se_guarda_hasheada_y_se_comprueba(app):
@@ -22,19 +21,19 @@ def test_password_se_guarda_hasheada_y_se_comprueba(app):
     assert not usuario.comprobar_password("clave-incorrecta")
 
 
-def test_usuario_tiene_rol_y_estado_por_defecto(app):
-    usuario = crear_usuario()
+def test_usuario_tiene_rol_y_estado_por_defecto(app, crear_usuario):
+    usuario = crear_usuario(email="socia@example.com", confirmar=False)
     db.session.commit()
 
     assert usuario.rol == "socio"
     assert usuario.estado == "pendiente"
 
 
-def test_email_se_normaliza_y_debe_ser_unico(app):
-    crear_usuario(email="Socia@Example.com")
+def test_email_se_normaliza_y_debe_ser_unico(app, crear_usuario):
+    crear_usuario(email="Socia@Example.com", confirmar=False)
     db.session.commit()
 
-    crear_usuario(email="socia@example.com")
+    crear_usuario(email="socia@example.com", confirmar=False)
     with pytest.raises(IntegrityError):
         db.session.commit()
     db.session.rollback()
@@ -52,8 +51,8 @@ def test_estado_no_permitido_lanza_error(estado):
         Usuario(email="socia@example.com", estado=estado)
 
 
-def test_metodos_de_rol_y_estado(app):
-    socio = crear_usuario()
+def test_metodos_de_rol_y_estado(app, crear_usuario):
+    socio = crear_usuario(email="socia@example.com", estado="pendiente")
     administradora = crear_usuario(
         email="admin@example.com",
         rol="administrador",
@@ -66,8 +65,8 @@ def test_metodos_de_rol_y_estado(app):
     assert administradora.esta_activo()
 
 
-def test_user_loader_recupera_usuario_por_id(app, cliente):
-    usuario = crear_usuario()
+def test_user_loader_recupera_usuario_por_id(app, cliente, crear_usuario):
+    usuario = crear_usuario(email="socia@example.com", estado="pendiente")
     db.session.commit()
 
     with cliente.session_transaction() as sesion:
@@ -79,8 +78,8 @@ def test_user_loader_recupera_usuario_por_id(app, cliente):
     assert respuesta.status_code == 200
 
 
-def test_fecha_alta_usa_utc(app):
-    usuario = crear_usuario()
+def test_fecha_alta_usa_utc(app, crear_usuario):
+    usuario = crear_usuario(email="socia@example.com", confirmar=False)
     db.session.flush()
 
     assert usuario.fecha_alta.tzinfo == timezone.utc

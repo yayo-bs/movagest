@@ -1,3 +1,8 @@
+"""Modelo de cuenta y estado de alta de una persona usuaria.
+
+Centraliza las validaciones y transiciones de aprobación de la cuenta.
+"""
+
 from datetime import datetime, timezone
 
 from flask_login import UserMixin
@@ -75,7 +80,6 @@ class Usuario(UserMixin, db.Model):
 
 @login_manager.user_loader
 def cargar_usuario(id_usuario):
-    """Recupera una cuenta por su identificador de sesión."""
     try:
         id_numerico = int(id_usuario)
     except (TypeError, ValueError):

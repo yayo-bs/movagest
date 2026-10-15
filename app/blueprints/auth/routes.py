@@ -1,3 +1,8 @@
+"""Rutas para solicitar el alta y gestionar la sesión de usuario.
+
+Los usuarios nuevos permanecen pendientes hasta que administración decida.
+"""
+
 from urllib.parse import urlsplit
 
 from flask import flash, redirect, render_template, request, url_for
