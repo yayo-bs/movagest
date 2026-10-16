@@ -16,6 +16,7 @@
             {% if current_user.is_authenticated %}
                 <span>{{ current_user.nombre }}</span>
                 <a href="{{ url_for('auth.inicio_socio') }}">Mi inicio</a>
+                <a href="{{ url_for('noticias.listar_noticias') }}">Noticias</a>
                 {% if current_user.es_administrador() %}
                     <a href="{{ url_for('admin.listar_altas') }}">Altas pendientes</a>
                 {% endif %}

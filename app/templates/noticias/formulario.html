@@ -1,0 +1,24 @@
+{# Formulario compartido para crear y editar noticias.
+   Los errores de validación se muestran junto al campo correspondiente. #}
+{% extends "base.html" %}
+
+{% block titulo %}{% if noticia %}Editar noticia{% else %}Crear noticia{% endif %} | MovaGest{% endblock %}
+
+{% block contenido %}
+    <section class="formulario">
+        <h1>{% if noticia %}Editar noticia{% else %}Crear noticia{% endif %}</h1>
+        <form method="post">
+            {{ formulario.hidden_tag() }}
+            {% for campo in (formulario.titulo, formulario.contenido) %}
+                <div class="campo">
+                    {{ campo.label }}
+                    {{ campo() }}
+                    {% for error in campo.errors %}
+                        <p class="error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            {{ formulario.guardar() }}
+        </form>
+    </section>
+{% endblock %}

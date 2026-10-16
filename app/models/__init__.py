@@ -1,8 +1,9 @@
-"""Modelos de datos disponibles para los demás módulos.
+"""Modelos de datos registrados en la aplicación.
 
-Importa Usuario para registrar su tabla y el cargador de sesión.
+Su importación permite que SQLAlchemy conozca todas las tablas del proyecto.
 """
 
+from app.models.noticia import Noticia
 from app.models.usuario import Usuario
 
-__all__ = ["Usuario"]
+__all__ = ["Noticia", "Usuario"]

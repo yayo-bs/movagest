@@ -1,0 +1,26 @@
+{# Muestra las noticias ordenadas desde la publicación más reciente.
+   Solo las cuentas administradoras pueden iniciar su creación. #}
+{% extends "base.html" %}
+
+{% block titulo %}Noticias | MovaGest{% endblock %}
+
+{% block contenido %}
+    <section>
+        <h1>Noticias</h1>
+        {% if current_user.es_administrador() %}
+            <p><a href="{{ url_for('noticias.nueva_noticia') }}">Crear noticia</a></p>
+        {% endif %}
+        {% if noticias %}
+            <ul>
+                {% for noticia in noticias %}
+                    <li>
+                        <h2><a href="{{ url_for('noticias.ver_noticia', id_noticia=noticia.id) }}">{{ noticia.titulo }}</a></h2>
+                        <p>{{ noticia.fecha_publicacion.strftime("%d/%m/%Y %H:%M") }}</p>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Todavía no hay noticias publicadas.</p>
+        {% endif %}
+    </section>
+{% endblock %}
