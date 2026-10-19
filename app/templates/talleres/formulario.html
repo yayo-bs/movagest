@@ -1,0 +1,24 @@
+{# Formulario administrativo compartido para talleres nuevos y existentes.
+   Los errores de validación se muestran junto al campo correspondiente. #}
+{% extends "base.html" %}
+
+{% block titulo %}{% if taller %}Editar taller{% else %}Nuevo taller{% endif %} | MovaGest{% endblock %}
+
+{% block contenido %}
+    <section class="formulario">
+        <h1>{% if taller %}Editar taller{% else %}Nuevo taller{% endif %}</h1>
+        <form method="post">
+            {{ formulario.hidden_tag() }}
+            {% for campo in (formulario.titulo, formulario.descripcion, formulario.fecha_hora, formulario.lugar, formulario.plazas) %}
+                <div class="campo">
+                    {{ campo.label }}
+                    {{ campo() }}
+                    {% for error in campo.errors %}
+                        <p class="error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            {{ formulario.guardar() }}
+        </form>
+    </section>
+{% endblock %}

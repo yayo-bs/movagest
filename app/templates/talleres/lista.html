@@ -1,0 +1,32 @@
+{# Lista actividades futuras y pasadas con el aforo y estado de inscripción.
+   La administración puede acceder desde aquí a la creación de talleres. #}
+{% extends "base.html" %}
+
+{% block titulo %}Talleres | MovaGest{% endblock %}
+
+{% block contenido %}
+    <section>
+        <h1>Talleres</h1>
+        {% if current_user.es_administrador() %}
+            <p><a href="{{ url_for('talleres.nuevo_taller') }}">Crear taller</a></p>
+        {% endif %}
+        {% if talleres %}
+            <ul>
+                {% for taller in talleres %}
+                    <li>
+                        <h2><a href="{{ url_for('talleres.ver_taller', id_taller=taller.id) }}">{{ taller.titulo }}</a></h2>
+                        <p>{{ taller.fecha_hora.strftime("%d/%m/%Y %H:%M") }} · {{ taller.lugar }}</p>
+                        <p>{{ taller.plazas_libres }} de {{ taller.plazas }} plazas libres</p>
+                        {% if taller.esta_finalizado %}
+                            <p>Finalizado</p>
+                        {% elif taller.esta_inscrito(current_user) %}
+                            <p>Ya estás inscrito</p>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No hay talleres publicados.</p>
+        {% endif %}
+    </section>
+{% endblock %}

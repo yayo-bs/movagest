@@ -52,12 +52,14 @@ def create_app(configuracion=None):
     from app.comandos import registrar_comandos
     from app.documentos import bp as documentos_bp
     from app.noticias import bp as noticias_bp
+    from app.talleres import bp as talleres_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(noticias_bp)
     app.register_blueprint(documentos_bp)
+    app.register_blueprint(talleres_bp)
     registrar_comandos(app)
 
     return app
