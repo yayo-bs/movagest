@@ -87,6 +87,8 @@ def login():
             flash("Tu alta está pendiente de aprobación.", "warning")
         elif usuario.estado == "rechazado":
             flash("Tu solicitud de alta ha sido rechazada.", "error")
+        elif usuario.estado == "baja":
+            flash("Tu cuenta está de baja y no puedes iniciar sesión.", "error")
         else:
             login_user(usuario)
             destino = request.args.get("next")

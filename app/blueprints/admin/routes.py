@@ -1,25 +1,63 @@
-"""Rutas administrativas para revisar solicitudes de alta.
+"""Rutas administrativas para gestionar solicitudes de alta.
 
-Las acciones de aprobación y rechazo se delegan al modelo Usuario.
+Incluye el ciclo de vida de los usuarios y la revisión de sus altas.
 """
 
-from flask import abort, flash, redirect, render_template, url_for
+from datetime import datetime, timezone
+
+from flask import abort, flash, redirect, render_template, request, url_for
+from flask_login import current_user
 
 from app.blueprints.admin import bp
 from app.decoradores import solo_administradores
 from app.extensiones import db
-from app.models import Usuario
+from app.models import Inscripcion, Taller, Usuario
 
 
 @bp.get("/altas")
 @solo_administradores
 def listar_altas():
-    usuarios = db.session.scalars(
-        db.select(Usuario)
-        .where(Usuario.estado == "pendiente")
-        .order_by(Usuario.fecha_alta)
+    estado = request.args.get("estado")
+    if estado and estado not in Usuario.ESTADOS:
+        flash("El filtro de estado no es válido.", "warning")
+        estado = None
+
+    consulta = db.select(Usuario).order_by(Usuario.fecha_alta)
+    if estado:
+        consulta = consulta.where(Usuario.estado == estado)
+    usuarios = db.session.scalars(consulta).all()
+    return render_template(
+        "admin/altas.html",
+        usuarios=usuarios,
+        estado_seleccionado=estado,
+    )
+
+
+def _fecha_en_utc(fecha):
+    if fecha.tzinfo is None:
+        return fecha.replace(tzinfo=timezone.utc)
+    return fecha
+
+
+def _cancelar_inscripciones_futuras(usuario):
+    ahora = datetime.now(timezone.utc)
+    inscripciones = db.session.scalars(
+        db.select(Inscripcion)
+        .join(Taller)
+        .where(Inscripcion.usuario_id == usuario.id)
     ).all()
-    return render_template("admin/altas.html", usuarios=usuarios)
+    for inscripcion in inscripciones:
+        if _fecha_en_utc(inscripcion.taller.fecha_hora) > ahora:
+            db.session.delete(inscripcion)
+
+
+def _tiene_contenido_asociado(usuario):
+    return bool(
+        usuario.noticias
+        or usuario.documentos
+        or usuario.inscripciones_talleres
+        or usuario.talleres_creados
+    )
 
 
 @bp.post("/altas/<int:id_usuario>/aprobar")
@@ -49,4 +87,97 @@ def rechazar_alta(id_usuario):
 
     db.session.commit()
     flash(f"Se ha rechazado el alta de {usuario.nombre}.", "success")
+    return redirect(url_for("admin.listar_altas"))
+
+
+@bp.post("/altas/<int:id_usuario>/reconsiderar")
+@solo_administradores
+def reconsiderar_alta(id_usuario):
+    usuario = db.session.get(Usuario, id_usuario)
+    if usuario is None:
+        abort(404)
+    if usuario.estado != "rechazado":
+        flash("Solo se pueden reconsiderar usuarios rechazados.", "warning")
+        return redirect(url_for("admin.listar_altas"))
+
+    usuario.estado = "pendiente"
+    db.session.commit()
+    flash(f"El alta de {usuario.nombre} vuelve a estar pendiente.", "success")
+    return redirect(url_for("admin.listar_altas"))
+
+
+@bp.post("/altas/<int:id_usuario>/eliminar")
+@solo_administradores
+def eliminar_usuario_rechazado(id_usuario):
+    usuario = db.session.get(Usuario, id_usuario)
+    if usuario is None:
+        abort(404)
+    if usuario.id == current_user.id:
+        flash("No puedes eliminar tu propia cuenta.", "warning")
+    elif usuario.es_administrador():
+        flash("No se pueden eliminar cuentas de administrador.", "warning")
+    elif usuario.estado != "rechazado":
+        flash("Solo se pueden eliminar usuarios rechazados.", "warning")
+    elif _tiene_contenido_asociado(usuario):
+        flash(
+            "No se puede eliminar el usuario porque tiene contenido asociado.",
+            "warning",
+        )
+    elif request.form.get("confirmar_borrado") != "si":
+        flash("Confirma que deseas eliminar definitivamente este usuario.", "warning")
+    else:
+        db.session.delete(usuario)
+        db.session.commit()
+        flash("El usuario rechazado se ha eliminado definitivamente.", "success")
+        return redirect(url_for("admin.listar_altas"))
+
+    return redirect(url_for("admin.listar_altas"))
+
+
+@bp.post("/usuarios/<int:id_usuario>/dar-baja")
+@solo_administradores
+def dar_de_baja_usuario(id_usuario):
+    usuario = db.session.get(Usuario, id_usuario)
+    if usuario is None:
+        abort(404)
+    if usuario.id == current_user.id:
+        flash("No puedes darte de baja a ti mismo.", "warning")
+    elif not usuario.esta_activo():
+        flash("Solo se puede dar de baja a usuarios activos.", "warning")
+    elif usuario.es_administrador() and _administradores_activos() <= 1:
+        flash("No se puede dar de baja al último administrador activo.", "warning")
+    elif request.form.get("confirmar_baja") != "si":
+        flash("Confirma que deseas dar de baja a este usuario.", "warning")
+    elif not usuario.dar_de_baja():
+        flash("Solo se puede dar de baja a usuarios activos.", "warning")
+    else:
+        _cancelar_inscripciones_futuras(usuario)
+        db.session.commit()
+        flash(f"Se ha dado de baja a {usuario.nombre}.", "success")
+        return redirect(url_for("admin.listar_altas"))
+
+    return redirect(url_for("admin.listar_altas"))
+
+
+def _administradores_activos():
+    return db.session.scalar(
+        db.select(db.func.count(Usuario.id)).where(
+            Usuario.rol == "administrador",
+            Usuario.estado == "activo",
+        )
+    )
+
+
+@bp.post("/usuarios/<int:id_usuario>/reactivar")
+@solo_administradores
+def reactivar_usuario(id_usuario):
+    usuario = db.session.get(Usuario, id_usuario)
+    if usuario is None:
+        abort(404)
+    if not usuario.reactivar():
+        flash("Solo se pueden reactivar usuarios que estén de baja.", "warning")
+        return redirect(url_for("admin.listar_altas"))
+
+    db.session.commit()
+    flash(f"Se ha reactivado a {usuario.nombre}.", "success")
     return redirect(url_for("admin.listar_altas"))

@@ -16,7 +16,7 @@ class Usuario(UserMixin, db.Model):
     """Representa a una persona socia o administradora de la asociación."""
 
     ROLES = ("socio", "administrador")
-    ESTADOS = ("pendiente", "activo", "rechazado")
+    ESTADOS = ("pendiente", "activo", "rechazado", "baja")
 
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100))
@@ -63,6 +63,11 @@ class Usuario(UserMixin, db.Model):
         """Indica si la cuenta está aprobada y activa."""
         return self.estado == "activo"
 
+    @property
+    def is_active(self):
+        """Hace que Flask-Login invalide sesiones de cuentas no activas."""
+        return self.esta_activo()
+
     def aprobar(self):
         """Activa la cuenta si todavía está pendiente de aprobación."""
         if self.estado != "pendiente":
@@ -75,6 +80,20 @@ class Usuario(UserMixin, db.Model):
         if self.estado != "pendiente":
             return False
         self.estado = "rechazado"
+        return True
+
+    def dar_de_baja(self):
+        """Marca como baja una cuenta activa."""
+        if not self.esta_activo():
+            return False
+        self.estado = "baja"
+        return True
+
+    def reactivar(self):
+        """Reactiva una cuenta que se encontraba de baja."""
+        if self.estado != "baja":
+            return False
+        self.estado = "activo"
         return True
 
 

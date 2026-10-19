@@ -45,7 +45,7 @@ def test_rol_no_permitido_lanza_error(rol):
         Usuario(email="socia@example.com", rol=rol)
 
 
-@pytest.mark.parametrize("estado", ["baja", ""])
+@pytest.mark.parametrize("estado", ["archivado", ""])
 def test_estado_no_permitido_lanza_error(estado):
     with pytest.raises(ValueError, match="Estado no permitido"):
         Usuario(email="socia@example.com", estado=estado)

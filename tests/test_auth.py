@@ -93,6 +93,7 @@ def test_login_redirige_a_ruta_interna_solicitada(cliente, crear_usuario):
     [
         ("pendiente", "Tu alta está pendiente de aprobación."),
         ("rechazado", "Tu solicitud de alta ha sido rechazada."),
+        ("baja", "Tu cuenta está de baja y no puedes iniciar sesión."),
     ],
 )
 def test_login_bloquea_estado_no_activo(cliente, crear_usuario, estado, mensaje):
@@ -107,6 +108,23 @@ def test_login_bloquea_estado_no_activo(cliente, crear_usuario, estado, mensaje)
     assert respuesta.status_code == 200
     assert mensaje.encode() in respuesta.data
     assert cliente.get("/auth/inicio").status_code == 302
+
+
+def test_usuario_con_sesion_activa_pierde_acceso_al_darse_de_baja(
+    cliente, crear_usuario
+):
+    usuario = crear_usuario(estado="activo")
+    cliente.post(
+        "/auth/login",
+        data={"email": usuario.email, "password": "clave-segura-123"},
+    )
+    usuario.estado = "baja"
+    db.session.commit()
+
+    respuesta = cliente.get("/auth/inicio")
+
+    assert respuesta.status_code == 302
+    assert "/auth/login" in respuesta.headers["Location"]
 
 
 def test_login_con_contrasena_incorrecta_no_revela_si_existe(
