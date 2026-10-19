@@ -14,6 +14,7 @@ contrasenas.txt
 
 # Ficheros subidos y generados por la app (documentos, actas, facturas PDF)
 uploads/
+instance/subidas/
 
 # Cachés y compilados de Python
 __pycache__/

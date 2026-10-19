@@ -32,6 +32,13 @@ def create_app(configuracion=None):
     else:
         app.config.from_object(configuracion)
 
+    if not app.config.get("CARPETA_SUBIDAS"):
+        app.config["CARPETA_SUBIDAS"] = os.path.join(
+            app.instance_path, "subidas"
+        )
+    if not app.testing:
+        os.makedirs(app.config["CARPETA_SUBIDAS"], exist_ok=True)
+
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
@@ -43,12 +50,14 @@ def create_app(configuracion=None):
     from app.blueprints.auth import bp as auth_bp
     from app.blueprints.main import bp as main_bp
     from app.comandos import registrar_comandos
+    from app.documentos import bp as documentos_bp
     from app.noticias import bp as noticias_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(noticias_bp)
+    app.register_blueprint(documentos_bp)
     registrar_comandos(app)
 
     return app

@@ -1,0 +1,107 @@
+"""Rutas para listar, descargar y gestionar documentos y actas.
+
+Solo el equipo administrador puede subir o borrar archivos.
+"""
+
+import os
+from uuid import uuid4
+
+from flask import (
+    abort,
+    current_app,
+    flash,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    url_for,
+)
+from flask_login import current_user, login_required
+from werkzeug.utils import secure_filename
+
+from app.decoradores import solo_administradores
+from app.documentos import bp
+from app.documentos.formularios import FormularioDocumento
+from app.extensiones import db
+from app.models import Documento
+
+
+@bp.get("/")
+@login_required
+def listar_documentos():
+    consulta = db.select(Documento)
+    categoria = request.args.get("categoria")
+    if categoria in Documento.CATEGORIAS:
+        consulta = consulta.where(Documento.categoria == categoria)
+    documentos = db.session.scalars(
+        consulta.order_by(Documento.fecha_subida.desc())
+    ).all()
+    return render_template(
+        "documentos/lista.html",
+        documentos=documentos,
+        categoria=categoria,
+    )
+
+
+@bp.get("/<int:id_documento>/descargar")
+@login_required
+def descargar_documento(id_documento):
+    documento = db.get_or_404(Documento, id_documento)
+    carpeta = current_app.config["CARPETA_SUBIDAS"]
+    if not os.path.isfile(os.path.join(carpeta, documento.nombre_archivo)):
+        abort(404)
+    return send_from_directory(
+        carpeta,
+        documento.nombre_archivo,
+        as_attachment=True,
+        download_name=documento.nombre_original,
+    )
+
+
+@bp.route("/nuevo", methods=["GET", "POST"])
+@solo_administradores
+def nuevo_documento():
+    formulario = FormularioDocumento()
+    if formulario.validate_on_submit():
+        archivo = formulario.archivo.data
+        nombre_original = secure_filename(archivo.filename)
+        extension = nombre_original.rsplit(".", 1)[1].lower()
+        nombre_archivo = f"{uuid4().hex}.{extension}"
+        carpeta = current_app.config["CARPETA_SUBIDAS"]
+        os.makedirs(carpeta, exist_ok=True)
+        archivo.save(os.path.join(carpeta, nombre_archivo))
+
+        documento = Documento(
+            titulo=formulario.titulo.data.strip(),
+            descripcion=formulario.descripcion.data.strip() or None,
+            categoria=formulario.categoria.data,
+            nombre_original=nombre_original,
+            nombre_archivo=nombre_archivo,
+            subido_por=current_user,
+        )
+        db.session.add(documento)
+        db.session.commit()
+        flash("El archivo se ha subido correctamente.", "success")
+        return redirect(url_for("documentos.listar_documentos"))
+
+    return render_template("documentos/formulario.html", formulario=formulario)
+
+
+@bp.post("/<int:id_documento>/borrar")
+@solo_administradores
+def borrar_documento(id_documento):
+    documento = db.get_or_404(Documento, id_documento)
+    if request.form.get("confirmar_borrado") != "si":
+        flash("Confirma que deseas borrar este archivo.", "warning")
+        return redirect(url_for("documentos.listar_documentos"))
+
+    ruta_archivo = os.path.join(
+        current_app.config["CARPETA_SUBIDAS"],
+        documento.nombre_archivo,
+    )
+    if os.path.isfile(ruta_archivo):
+        os.remove(ruta_archivo)
+    db.session.delete(documento)
+    db.session.commit()
+    flash("El archivo se ha borrado correctamente.", "success")
+    return redirect(url_for("documentos.listar_documentos"))

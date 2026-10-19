@@ -4,6 +4,7 @@ Su importación permite que SQLAlchemy conozca todas las tablas del proyecto.
 """
 
 from app.models.noticia import Noticia
+from app.models.documento import Documento
 from app.models.usuario import Usuario
 
-__all__ = ["Noticia", "Usuario"]
+__all__ = ["Documento", "Noticia", "Usuario"]

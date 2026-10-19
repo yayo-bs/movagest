@@ -1,0 +1,29 @@
+{# Formulario administrativo para subir un documento o acta.
+   La carga multipart permite validar y guardar el archivo seleccionado. #}
+{% extends "base.html" %}
+
+{% block titulo %}Subir documento | MovaGest{% endblock %}
+
+{% block contenido %}
+    <section class="formulario">
+        <h1>Subir documento o acta</h1>
+        {% if formulario %}
+            <form method="post" enctype="multipart/form-data">
+                {{ formulario.hidden_tag() }}
+                {% for campo in (formulario.titulo, formulario.descripcion, formulario.categoria, formulario.archivo) %}
+                    <div class="campo">
+                        {{ campo.label }}
+                        {{ campo() }}
+                        {% for error in campo.errors %}
+                            <p class="error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                {{ formulario.guardar() }}
+            </form>
+        {% else %}
+            <p>El archivo supera el tamaño máximo permitido de 10 MB.</p>
+            <a href="{{ url_for('documentos.nuevo_documento') }}">Volver al formulario</a>
+        {% endif %}
+    </section>
+{% endblock %}

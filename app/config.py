@@ -12,6 +12,16 @@ class ConfiguracionBase:
         "DATABASE_URL", "sqlite:///movagest.db"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    MAX_CONTENT_LENGTH = 10 * 1024 * 1024
+    EXTENSIONES_DOCUMENTOS_PERMITIDAS = (
+        "pdf",
+        "doc",
+        "docx",
+        "odt",
+        "jpg",
+        "jpeg",
+        "png",
+    )
 
 
 class ConfiguracionDesarrollo(ConfiguracionBase):

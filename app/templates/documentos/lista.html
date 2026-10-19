@@ -1,0 +1,45 @@
+{# Muestra documentos y actas disponibles para usuarios autenticados.
+   Las acciones de subida y borrado aparecen solo para administradores. #}
+{% extends "base.html" %}
+
+{% block titulo %}Documentos y actas | MovaGest{% endblock %}
+
+{% block contenido %}
+    <section>
+        <h1>Documentos y actas</h1>
+        <nav aria-label="Filtrar documentos">
+            <a href="{{ url_for('documentos.listar_documentos') }}">Todos</a>
+            <a href="{{ url_for('documentos.listar_documentos', categoria='documento') }}">Documentos</a>
+            <a href="{{ url_for('documentos.listar_documentos', categoria='acta') }}">Actas</a>
+        </nav>
+        {% if current_user.es_administrador() %}
+            <p><a href="{{ url_for('documentos.nuevo_documento') }}">Subir archivo</a></p>
+        {% endif %}
+        {% if documentos %}
+            <ul>
+                {% for documento in documentos %}
+                    <li>
+                        <h2>{{ documento.titulo }}</h2>
+                        <p>{{ documento.categoria|capitalize }} · {{ documento.fecha_subida.strftime("%d/%m/%Y %H:%M") }}</p>
+                        {% if documento.descripcion %}
+                            <p>{{ documento.descripcion }}</p>
+                        {% endif %}
+                        <a href="{{ url_for('documentos.descargar_documento', id_documento=documento.id) }}">Descargar {{ documento.nombre_original }}</a>
+                        {% if current_user.es_administrador() %}
+                            <form method="post" action="{{ url_for('documentos.borrar_documento', id_documento=documento.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <label>
+                                    <input type="checkbox" name="confirmar_borrado" value="si" required>
+                                    Confirmo que quiero borrar este archivo.
+                                </label>
+                                <button type="submit">Borrar</button>
+                            </form>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No hay archivos en esta categoría.</p>
+        {% endif %}
+    </section>
+{% endblock %}

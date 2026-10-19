@@ -1,7 +1,9 @@
 """Fixtures de aplicación y cliente HTTP para las pruebas.
 
-Cada prueba recibe una base de datos aislada en memoria.
+Cada prueba usa una base de datos en memoria y una carpeta temporal.
 """
+
+import os
 
 import pytest
 
@@ -11,9 +13,11 @@ from app.models import Usuario
 
 
 @pytest.fixture
-def app():
-    """Prepara una aplicación aislada con una base de datos en memoria."""
+def app(tmp_path):
+    """Prepara una app con base de datos y subidas aisladas."""
     aplicacion = create_app("testing")
+    aplicacion.config["CARPETA_SUBIDAS"] = str(tmp_path / "subidas")
+    os.makedirs(aplicacion.config["CARPETA_SUBIDAS"], exist_ok=True)
 
     with aplicacion.app_context():
         db.create_all()
