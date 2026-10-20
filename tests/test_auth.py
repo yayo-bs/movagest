@@ -38,7 +38,7 @@ def test_registro_crea_usuario_pendiente_sin_iniciar_sesion(cliente):
     )
     assert usuario.rol == "socio"
     assert usuario.estado == "pendiente"
-    assert cliente.get("/auth/inicio").status_code == 302
+    assert cliente.get("/inicio").status_code == 302
 
 
 def test_registro_rechaza_email_duplicado(cliente, crear_usuario):
@@ -72,20 +72,20 @@ def test_login_de_usuario_activo(cliente, crear_usuario):
     )
 
     assert respuesta.status_code == 302
-    assert respuesta.headers["Location"].endswith("/")
-    assert b"Hola, Ana" in cliente.get("/auth/inicio").data
+    assert respuesta.headers["Location"].endswith("/inicio")
+    assert b"Hola, Ana" in cliente.get("/inicio").data
 
 
 def test_login_redirige_a_ruta_interna_solicitada(cliente, crear_usuario):
     crear_usuario(estado="activo")
 
     respuesta = cliente.post(
-        "/auth/login?next=/auth/inicio",
+        "/auth/login?next=/auth/registro",
         data={"email": "persona@example.com", "password": "clave-segura-123"},
     )
 
     assert respuesta.status_code == 302
-    assert respuesta.headers["Location"].endswith("/auth/inicio")
+    assert respuesta.headers["Location"].endswith("/auth/registro")
 
 
 @pytest.mark.parametrize(
@@ -107,7 +107,7 @@ def test_login_bloquea_estado_no_activo(cliente, crear_usuario, estado, mensaje)
 
     assert respuesta.status_code == 200
     assert mensaje.encode() in respuesta.data
-    assert cliente.get("/auth/inicio").status_code == 302
+    assert cliente.get("/inicio").status_code == 302
 
 
 def test_usuario_con_sesion_activa_pierde_acceso_al_darse_de_baja(
@@ -121,7 +121,7 @@ def test_usuario_con_sesion_activa_pierde_acceso_al_darse_de_baja(
     usuario.estado = "baja"
     db.session.commit()
 
-    respuesta = cliente.get("/auth/inicio")
+    respuesta = cliente.get("/inicio")
 
     assert respuesta.status_code == 302
     assert "/auth/login" in respuesta.headers["Location"]
@@ -140,7 +140,7 @@ def test_login_con_contrasena_incorrecta_no_revela_si_existe(
 
     assert "Correo electrónico o contraseña incorrectos.".encode() in respuesta.data
     assert b"pendiente" not in respuesta.data
-    assert cliente.get("/auth/inicio").status_code == 302
+    assert cliente.get("/inicio").status_code == 302
 
 
 def test_login_con_email_inexistente_usa_mensaje_generico(cliente):
@@ -154,10 +154,10 @@ def test_login_con_email_inexistente_usa_mensaje_generico(cliente):
 
 
 def test_inicio_socio_sin_sesion_redirige_a_login(cliente):
-    respuesta = cliente.get("/auth/inicio")
+    respuesta = cliente.get("/inicio")
 
     assert respuesta.status_code == 302
-    assert "/auth/login?next=%2Fauth%2Finicio" in respuesta.headers["Location"]
+    assert "/auth/login?next=%2Finicio" in respuesta.headers["Location"]
     assert b"Inicia sesi\xc3\xb3n" in cliente.get(
         respuesta.headers["Location"]
     ).data
@@ -175,7 +175,7 @@ def test_logout_cierra_sesion_y_solo_acepta_post(cliente, crear_usuario):
 
     assert respuesta.status_code == 302
     assert respuesta.headers["Location"].endswith("/")
-    assert cliente.get("/auth/inicio").status_code == 302
+    assert cliente.get("/inicio").status_code == 302
 
 
 @pytest.mark.parametrize(
@@ -191,4 +191,4 @@ def test_login_rechaza_redireccion_externa(cliente, crear_usuario, destino):
     )
 
     assert respuesta.status_code == 302
-    assert respuesta.headers["Location"].endswith("/")
+    assert respuesta.headers["Location"].endswith("/inicio")

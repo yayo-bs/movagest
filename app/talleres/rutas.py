@@ -21,6 +21,7 @@ from app.decoradores import solo_administradores
 from app.extensiones import db
 from app.models import Inscripcion, Taller
 from app.talleres import bp
+from app.talleres.consultas import filtro_talleres_con_plazas_libres
 from app.talleres.formularios import FormularioTaller
 from app.utilidades.listados import paginar_consulta, preparar_listado
 
@@ -46,11 +47,6 @@ def _guardar_taller(taller, formulario):
 @bp.get("/")
 @login_required
 def listar_talleres():
-    inscripciones = (
-        db.select(db.func.count(Inscripcion.id))
-        .where(Inscripcion.taller_id == Taller.id)
-        .scalar_subquery()
-    )
     consulta, valores = preparar_listado(
         db.select(Taller),
         request.args,
@@ -62,7 +58,7 @@ def listar_talleres():
         Taller.fecha_hora.asc(),
         filtros={
             "plazas_libres": {
-                "si": inscripciones < Taller.plazas,
+                "si": filtro_talleres_con_plazas_libres(),
             }
         },
         direccion_por_defecto="asc",

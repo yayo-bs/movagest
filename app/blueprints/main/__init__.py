@@ -1,6 +1,6 @@
-"""Blueprint para la página pública principal.
+"""Blueprint para las páginas generales de MovaGest.
 
-Su ruta raíz presenta la portada de MovaGest.
+Incluye la home pública y el inicio de las cuentas autenticadas.
 """
 
 from flask import Blueprint

@@ -6,7 +6,7 @@ Los usuarios nuevos permanecen pendientes hasta que administración decida.
 from urllib.parse import urlsplit
 
 from flask import flash, redirect, render_template, request, url_for
-from flask_login import current_user, login_required, login_user, logout_user
+from flask_login import current_user, login_user, logout_user
 from sqlalchemy.exc import IntegrityError
 
 from app.blueprints.auth import bp
@@ -20,11 +20,12 @@ def _destino_interno(destino):
     if not destino or "\\" in destino or any(ord(caracter) < 32 for caracter in destino):
         return False
 
+    if not destino.startswith("/") or destino.startswith("//"):
+        return False
+
     partes = urlsplit(destino)
     return (
-        destino.startswith("/")
-        and not destino.startswith("//")
-        and not partes.scheme
+        not partes.scheme
         and not partes.netloc
     )
 
@@ -102,10 +103,4 @@ def login():
 @bp.post("/logout")
 def logout():
     logout_user()
-    return redirect(url_for("main.inicio"))
-
-
-@bp.get("/inicio")
-@login_required
-def inicio_socio():
-    return render_template("auth/inicio.html", usuario=current_user)
+    return redirect(url_for("main.home_publica"))

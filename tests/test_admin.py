@@ -77,7 +77,7 @@ def test_aprobar_activa_usuario_y_permita_iniciar_sesion(
         },
     )
     assert respuesta_login.status_code == 302
-    assert b"Hola, Ana" in cliente_socio.get("/auth/inicio").data
+    assert b"Hola, Ana" in cliente_socio.get("/inicio").data
 
 
 def test_rechazar_no_permite_iniciar_sesion(cliente, crear_usuario):
@@ -105,7 +105,7 @@ def test_rechazar_no_permite_iniciar_sesion(cliente, crear_usuario):
     )
     assert respuesta_login.status_code == 200
     assert "Tu solicitud de alta ha sido rechazada.".encode() in respuesta_login.data
-    assert cliente.get("/auth/inicio").status_code == 302
+    assert cliente.get("/inicio").status_code == 302
 
 
 def test_aprobar_usuario_no_pendiente_no_cambia_estado(cliente, crear_usuario):
@@ -581,7 +581,7 @@ def test_reactivar_usuario_de_baja_permite_iniciar_sesion(
     assert db.session.get(Usuario, usuario.id).estado == "activo"
     assert b"Se ha reactivado" in respuesta.data
     assert respuesta_login.status_code == 302
-    assert b"Hola, Ana" in cliente_socio.get("/auth/inicio").data
+    assert b"Hola, Ana" in cliente_socio.get("/inicio").data
 
 
 def test_reactivar_usuario_que_no_esta_de_baja_se_rechaza(

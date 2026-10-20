@@ -10,12 +10,11 @@
 </head>
 <body>
     <header class="cabecera">
-        <a class="marca" href="{{ url_for('main.inicio') }}">MovaGest</a>
+        <a class="marca" href="{% if current_user.is_authenticated %}{{ url_for('main.inicio') }}{% else %}{{ url_for('main.home_publica') }}{% endif %}">MovaGest</a>
         <nav aria-label="Navegación principal">
-            <a href="{{ url_for('main.inicio') }}">Inicio</a>
             {% if current_user.is_authenticated %}
+                <a href="{{ url_for('main.inicio') }}">Inicio</a>
                 <span>{{ current_user.nombre }}</span>
-                <a href="{{ url_for('auth.inicio_socio') }}">Mi inicio</a>
                 <a href="{{ url_for('noticias.listar_noticias') }}">Noticias</a>
                 <a href="{{ url_for('asambleas.listar_asambleas') }}">Asambleas</a>
                 <a href="{{ url_for('documentos.listar_documentos') }}">Documentos</a>
@@ -28,6 +27,7 @@
                     <button type="submit">Salir</button>
                 </form>
             {% else %}
+                <a href="{{ url_for('main.home_publica') }}">Inicio</a>
                 <a href="{{ url_for('auth.login') }}">Entrar</a>
                 <a href="{{ url_for('auth.registro') }}">Solicitar alta</a>
             {% endif %}

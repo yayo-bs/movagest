@@ -16,6 +16,7 @@ from flask import (
 from flask_login import current_user, login_required
 
 from app.asambleas import bp
+from app.asambleas.consultas import filtro_asambleas_futuras
 from app.asambleas.formularios import FormularioAsamblea
 from app.decoradores import solo_administradores
 from app.extensiones import db
@@ -38,7 +39,7 @@ def _guardar_asamblea(asamblea, formulario):
 @login_required
 def listar_asambleas():
     ahora = datetime.now(timezone.utc).replace(tzinfo=None)
-    fecha_futura = Asamblea.fecha_hora >= ahora
+    fecha_futura = filtro_asambleas_futuras(incluir_momento_actual=True)
     fecha_pasada = Asamblea.fecha_hora < ahora
     orden_predeterminado = [
         db.case((fecha_futura, 0), else_=1).asc(),
