@@ -4,7 +4,6 @@ La lista y el detalle requieren sesión; las modificaciones requieren rol admin.
 """
 
 from flask import (
-    abort,
     current_app,
     flash,
     redirect,

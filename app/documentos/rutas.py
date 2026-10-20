@@ -27,6 +27,38 @@ from app.models import Documento
 from app.utilidades.listados import paginar_consulta, preparar_listado
 
 
+def _guardar_documento(formulario, usuario):
+    archivo = formulario.archivo.data
+    nombre_original = secure_filename(archivo.filename)
+    extension = nombre_original.rsplit(".", 1)[1].lower()
+    nombre_archivo = f"{uuid4().hex}.{extension}"
+    carpeta = current_app.config["CARPETA_SUBIDAS"]
+    os.makedirs(carpeta, exist_ok=True)
+    archivo.save(os.path.join(carpeta, nombre_archivo))
+
+    documento = Documento(
+        titulo=formulario.titulo.data.strip(),
+        descripcion=formulario.descripcion.data.strip() or None,
+        categoria=formulario.categoria.data,
+        nombre_original=nombre_original,
+        nombre_archivo=nombre_archivo,
+        subido_por=usuario,
+    )
+    db.session.add(documento)
+    db.session.commit()
+
+
+def _eliminar_documento(documento):
+    ruta_archivo = os.path.join(
+        current_app.config["CARPETA_SUBIDAS"],
+        documento.nombre_archivo,
+    )
+    if os.path.isfile(ruta_archivo):
+        os.remove(ruta_archivo)
+    db.session.delete(documento)
+    db.session.commit()
+
+
 @bp.get("/")
 @login_required
 def listar_documentos():
@@ -81,24 +113,7 @@ def descargar_documento(id_documento):
 def nuevo_documento():
     formulario = FormularioDocumento()
     if formulario.validate_on_submit():
-        archivo = formulario.archivo.data
-        nombre_original = secure_filename(archivo.filename)
-        extension = nombre_original.rsplit(".", 1)[1].lower()
-        nombre_archivo = f"{uuid4().hex}.{extension}"
-        carpeta = current_app.config["CARPETA_SUBIDAS"]
-        os.makedirs(carpeta, exist_ok=True)
-        archivo.save(os.path.join(carpeta, nombre_archivo))
-
-        documento = Documento(
-            titulo=formulario.titulo.data.strip(),
-            descripcion=formulario.descripcion.data.strip() or None,
-            categoria=formulario.categoria.data,
-            nombre_original=nombre_original,
-            nombre_archivo=nombre_archivo,
-            subido_por=current_user,
-        )
-        db.session.add(documento)
-        db.session.commit()
+        _guardar_documento(formulario, current_user)
         flash("El archivo se ha subido correctamente.", "success")
         return redirect(url_for("documentos.listar_documentos"))
 
@@ -113,13 +128,6 @@ def borrar_documento(id_documento):
         flash("Confirma que deseas borrar este archivo.", "warning")
         return redirect(url_for("documentos.listar_documentos"))
 
-    ruta_archivo = os.path.join(
-        current_app.config["CARPETA_SUBIDAS"],
-        documento.nombre_archivo,
-    )
-    if os.path.isfile(ruta_archivo):
-        os.remove(ruta_archivo)
-    db.session.delete(documento)
-    db.session.commit()
+    _eliminar_documento(documento)
     flash("El archivo se ha borrado correctamente.", "success")
     return redirect(url_for("documentos.listar_documentos"))

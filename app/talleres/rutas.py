@@ -6,7 +6,6 @@ Los socios gestionan sus inscripciones y los administradores los talleres.
 from datetime import datetime, timezone
 
 from flask import (
-    abort,
     current_app,
     flash,
     redirect,
@@ -42,6 +41,32 @@ def _guardar_taller(taller, formulario):
     taller.fecha_hora = _fecha_con_zona(formulario.fecha_hora.data)
     taller.lugar = formulario.lugar.data.strip()
     taller.plazas = formulario.plazas.data
+
+
+def _procesar_inscripcion(taller, usuario):
+    if taller.esta_inscrito(usuario):
+        return "Ya estás inscrito en este taller.", "warning"
+    if _taller_ha_pasado(taller):
+        return "Este taller ya ha finalizado y no admite inscripciones.", "warning"
+    if taller.esta_completo:
+        return "El taller está completo y no quedan plazas libres.", "warning"
+
+    db.session.add(Inscripcion(taller=taller, usuario=usuario))
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        inscripcion_existente = db.session.scalar(
+            db.select(Inscripcion).where(
+                Inscripcion.taller_id == taller.id,
+                Inscripcion.usuario_id == usuario.id,
+            )
+        )
+        if inscripcion_existente is None:
+            raise
+        return "Ya estás inscrito en este taller.", "warning"
+
+    return "Te has inscrito correctamente en el taller.", "success"
 
 
 @bp.get("/")
@@ -89,31 +114,8 @@ def ver_taller(id_taller):
 @login_required
 def inscribirse(id_taller):
     taller = db.get_or_404(Taller, id_taller)
-    if taller.esta_inscrito(current_user):
-        flash("Ya estás inscrito en este taller.", "warning")
-    elif _taller_ha_pasado(taller):
-        flash("Este taller ya ha finalizado y no admite inscripciones.", "warning")
-    elif taller.esta_completo:
-        flash("El taller está completo y no quedan plazas libres.", "warning")
-    else:
-        db.session.add(
-            Inscripcion(taller=taller, usuario=current_user)
-        )
-        try:
-            db.session.commit()
-        except IntegrityError:
-            db.session.rollback()
-            inscripcion_existente = db.session.scalar(
-                db.select(Inscripcion).where(
-                    Inscripcion.taller_id == id_taller,
-                    Inscripcion.usuario_id == current_user.id,
-                )
-            )
-            if inscripcion_existente is None:
-                raise
-            flash("Ya estás inscrito en este taller.", "warning")
-        else:
-            flash("Te has inscrito correctamente en el taller.", "success")
+    mensaje, categoria = _procesar_inscripcion(taller, current_user)
+    flash(mensaje, categoria)
 
     return redirect(url_for("talleres.ver_taller", id_taller=id_taller))
 
