@@ -1,6 +1,6 @@
-{# Muestra primero las convocatorias futuras y después las ya celebradas.
-   Las acciones de administración solo aparecen para el rol administrador. #}
+{# Muestra las convocatorias en el orden de la consulta SQL y permite filtrarlas. #}
 {% extends "base.html" %}
+{% from "_filtros.html" import filtros_listado %}
 
 {% block titulo %}Asambleas | MovaGest{% endblock %}
 
@@ -11,35 +11,42 @@
             <p><a href="{{ url_for('asambleas.nueva_asamblea') }}">Nueva convocatoria</a></p>
         {% endif %}
 
-        <h2>Próximas</h2>
-        {% if futuras %}
+        {% call filtros_listado(valores, [("fecha", "Fecha"), ("titulo", "Título")]) %}
+            <label>
+                Tipo
+                <select name="tipo">
+                    <option value="" {% if not valores.tipo %}selected{% endif %}>Todos</option>
+                    <option value="ordinaria" {% if valores.tipo == "ordinaria" %}selected{% endif %}>Ordinaria</option>
+                    <option value="extraordinaria" {% if valores.tipo == "extraordinaria" %}selected{% endif %}>Extraordinaria</option>
+                </select>
+            </label>
+            <label>
+                Periodo
+                <select name="periodo">
+                    <option value="" {% if not valores.periodo %}selected{% endif %}>Todas</option>
+                    <option value="proximas" {% if valores.periodo == "proximas" %}selected{% endif %}>Próximas</option>
+                    <option value="pasadas" {% if valores.periodo == "pasadas" %}selected{% endif %}>Pasadas</option>
+                </select>
+            </label>
+        {% endcall %}
+        {% if asambleas %}
             <ul>
-                {% for asamblea in futuras %}
+                {% for asamblea in asambleas %}
                     <li>
                         <h3><a href="{{ url_for('asambleas.ver_asamblea', id_asamblea=asamblea.id) }}">{{ asamblea.titulo }}</a></h3>
                         <p>{{ asamblea.fecha_hora.strftime("%d/%m/%Y %H:%M") }} · {{ asamblea.lugar }}</p>
+                        <p>{% if asamblea.es_futura %}Próxima{% else %}Pasada{% endif %}</p>
                         {% if current_user.es_administrador() %}
                             <a href="{{ url_for('asambleas.editar_asamblea', id_asamblea=asamblea.id) }}">Editar</a>
                         {% endif %}
                     </li>
                 {% endfor %}
             </ul>
+        {% elif hay_filtros %}
+            <p>No se encontraron resultados.</p>
         {% else %}
-            <p>No hay convocatorias próximas.</p>
+            <p>No hay convocatorias publicadas.</p>
         {% endif %}
-
-        <h2>Pasadas</h2>
-        {% if pasadas %}
-            <ul>
-                {% for asamblea in pasadas %}
-                    <li>
-                        <h3><a href="{{ url_for('asambleas.ver_asamblea', id_asamblea=asamblea.id) }}">{{ asamblea.titulo }}</a></h3>
-                        <p>{{ asamblea.fecha_hora.strftime("%d/%m/%Y %H:%M") }} · {{ asamblea.lugar }}</p>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No hay convocatorias pasadas.</p>
-        {% endif %}
+        {% include "_paginacion.html" %}
     </section>
 {% endblock %}

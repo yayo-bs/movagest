@@ -1,0 +1,13 @@
+{# Navegación común para recorrer las páginas de los listados.
+   Los parámetros efectivos mantienen la búsqueda y los filtros activos. #}
+{% if paginacion.pages > 1 %}
+    <nav aria-label="Paginación">
+        {% if paginacion.has_prev %}
+            <a href="{{ url_for(request.endpoint, pagina=paginacion.prev_num, **parametros_paginacion) }}">Anterior</a>
+        {% endif %}
+        <span>Página {{ paginacion.page }} de {{ paginacion.pages }}</span>
+        {% if paginacion.has_next %}
+            <a href="{{ url_for(request.endpoint, pagina=paginacion.next_num, **parametros_paginacion) }}">Siguiente</a>
+        {% endif %}
+    </nav>
+{% endif %}

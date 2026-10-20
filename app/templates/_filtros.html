@@ -1,0 +1,29 @@
+{# Formulario compartido para buscar y ordenar los listados.
+   Cada módulo puede añadir sus controles de filtro específicos. #}
+{% macro filtros_listado(valores, ordenaciones) %}
+    <form method="get" action="{{ request.path }}">
+        <label>
+            Buscar
+            <input type="search" name="q" value="{{ valores.q }}">
+        </label>
+        <label>
+            Ordenar por
+            <select name="orden">
+                <option value="" {% if not valores.orden %}selected{% endif %}>Predeterminado</option>
+                {% for clave, etiqueta in ordenaciones %}
+                    <option value="{{ clave }}" {% if valores.orden == clave %}selected{% endif %}>{{ etiqueta }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            Dirección
+            <select name="dir">
+                <option value="asc" {% if valores.dir == "asc" %}selected{% endif %}>Ascendente</option>
+                <option value="desc" {% if valores.dir == "desc" %}selected{% endif %}>Descendente</option>
+            </select>
+        </label>
+        {{ caller() }}
+        <button type="submit">Buscar</button>
+        <a href="{{ request.path }}">Limpiar</a>
+    </form>
+{% endmacro %}

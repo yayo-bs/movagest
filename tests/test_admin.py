@@ -382,6 +382,94 @@ def test_listado_general_muestra_usuarios_y_filtra_por_estado(
         )
 
 
+def test_socio_no_accede_a_listado_admin_manipulando_filtros(
+    cliente, crear_usuario
+):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    iniciar_sesion(cliente, socio)
+
+    respuesta = cliente.get(
+        "/admin/altas?q=socio&estado=pendiente&orden=nombre"
+    )
+
+    assert respuesta.status_code == 403
+
+
+def test_listado_admin_busca_por_nombre_apellidos_y_correo(
+    cliente, crear_usuario
+):
+    administradora = crear_usuario(
+        email="admin@example.com",
+        nombre="Junta",
+        rol="administrador",
+        estado="activo",
+    )
+    persona = crear_usuario(
+        email="danza@example.com",
+        nombre="Clara",
+        apellidos="Danza",
+        estado="pendiente",
+    )
+    crear_usuario(
+        email="musica@example.com",
+        nombre="Mario",
+        apellidos="Música",
+        estado="pendiente",
+    )
+    iniciar_sesion(cliente, administradora)
+
+    por_apellido = cliente.get("/admin/altas?q=DANZA")
+    por_correo = cliente.get("/admin/altas?q=danza%40example.com")
+
+    assert persona.email.encode() in por_apellido.data
+    assert b"musica@example.com" not in por_apellido.data
+    assert persona.email.encode() in por_correo.data
+
+
+def test_listado_admin_muestra_mensaje_sin_resultados(
+    cliente, crear_usuario
+):
+    administradora = crear_usuario(
+        email="admin@example.com",
+        rol="administrador",
+        estado="activo",
+    )
+    iniciar_sesion(cliente, administradora)
+
+    respuesta = cliente.get("/admin/altas?q=persona-inexistente")
+
+    assert b"No se encontraron resultados" in respuesta.data
+    assert b"No hay usuarios para este filtro" not in respuesta.data
+
+
+def test_listado_admin_ordena_por_nombre_en_ambas_direcciones(
+    cliente, crear_usuario
+):
+    administradora = crear_usuario(
+        email="admin@example.com",
+        nombre="Junta",
+        rol="administrador",
+        estado="activo",
+    )
+    crear_usuario(
+        email="z@example.com",
+        nombre="Zoe",
+        estado="pendiente",
+    )
+    crear_usuario(
+        email="a@example.com",
+        nombre="Ana",
+        estado="pendiente",
+    )
+    iniciar_sesion(cliente, administradora)
+
+    ascendente = cliente.get("/admin/altas?orden=nombre&dir=asc")
+    descendente = cliente.get("/admin/altas?orden=nombre&dir=desc")
+
+    assert ascendente.data.index(b"Ana") < ascendente.data.index(b"Zoe")
+    assert descendente.data.index(b"Zoe") < descendente.data.index(b"Ana")
+
+
 def test_dar_de_baja_conserva_contenido_creado(
     cliente, crear_usuario
 ):

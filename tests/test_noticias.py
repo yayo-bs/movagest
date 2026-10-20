@@ -153,3 +153,43 @@ def test_listado_ordena_por_fecha_descendente(cliente, crear_usuario):
     assert respuesta.data.index(b"Noticia reciente") < respuesta.data.index(
         b"Noticia antigua"
     )
+
+
+def test_listado_busca_en_titulo_y_contenido(cliente, crear_usuario):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    crear_noticia(socio, "Ensayo", "Coreografía flamenca")
+    crear_noticia(socio, "Concierto", "Música en directo")
+    iniciar_sesion(cliente, socio)
+
+    respuesta = cliente.get("/noticias/?q=FLAMENCA")
+
+    assert b"Ensayo" in respuesta.data
+    assert b"Concierto" not in respuesta.data
+
+
+def test_listado_muestra_mensaje_si_busqueda_no_tiene_resultados(
+    cliente, crear_usuario
+):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    crear_noticia(socio)
+    iniciar_sesion(cliente, socio)
+
+    respuesta = cliente.get("/noticias/?q=inexistente")
+
+    assert b"No se encontraron resultados" in respuesta.data
+    assert b"Todav\xc3\xada no hay noticias publicadas" not in respuesta.data
+
+
+def test_listado_ordena_por_titulo_en_ambas_direcciones(
+    cliente, crear_usuario
+):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    crear_noticia(socio, "Zeta")
+    crear_noticia(socio, "Alfa")
+    iniciar_sesion(cliente, socio)
+
+    ascendente = cliente.get("/noticias/?orden=titulo&dir=asc")
+    descendente = cliente.get("/noticias/?orden=titulo&dir=desc")
+
+    assert ascendente.data.index(b"Alfa") < ascendente.data.index(b"Zeta")
+    assert descendente.data.index(b"Zeta") < descendente.data.index(b"Alfa")

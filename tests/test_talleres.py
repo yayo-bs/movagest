@@ -329,3 +329,62 @@ def test_listado_ordena_talleres_por_fecha_ascendente(
     assert respuesta.data.index(b"Taller anterior") < respuesta.data.index(
         b"Taller posterior"
     )
+
+
+def test_listado_busca_en_titulo_y_descripcion(cliente, crear_usuario):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    crear_taller(socio, titulo="Danza", descripcion="Coreografía flamenca")
+    crear_taller(socio, titulo="Música", descripcion="Ensayo de percusión")
+    iniciar_sesion(cliente, socio)
+
+    respuesta = cliente.get("/talleres/?q=FLAMENCA")
+
+    assert b"Danza" in respuesta.data
+    assert b"M\xc3\xbasica" not in respuesta.data
+
+
+def test_listado_sin_coincidencias_muestra_mensaje_claro(
+    cliente, crear_usuario
+):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    crear_taller(socio)
+    iniciar_sesion(cliente, socio)
+
+    respuesta = cliente.get("/talleres/?q=inexistente")
+
+    assert b"No se encontraron resultados" in respuesta.data
+    assert b"No hay talleres publicados" not in respuesta.data
+
+
+def test_listado_ordena_por_titulo_en_ambas_direcciones(
+    cliente, crear_usuario
+):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    crear_taller(socio, titulo="Zeta")
+    crear_taller(socio, titulo="Alfa")
+    iniciar_sesion(cliente, socio)
+
+    ascendente = cliente.get("/talleres/?orden=titulo&dir=asc")
+    descendente = cliente.get("/talleres/?orden=titulo&dir=desc")
+
+    assert ascendente.data.index(b"Alfa") < ascendente.data.index(b"Zeta")
+    assert descendente.data.index(b"Zeta") < descendente.data.index(b"Alfa")
+
+
+def test_filtro_muestra_solo_talleres_con_plazas_libres(
+    cliente, crear_usuario
+):
+    administrador = crear_usuario(
+        email="admin@example.com", rol="administrador", estado="activo"
+    )
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    crear_taller(administrador, titulo="Con plazas", plazas=2)
+    completo = crear_taller(administrador, titulo="Completo", plazas=1)
+    db.session.add(Inscripcion(taller=completo, usuario=socio))
+    db.session.commit()
+    iniciar_sesion(cliente, socio)
+
+    respuesta = cliente.get("/talleres/?plazas_libres=si")
+
+    assert b"Con plazas" in respuesta.data
+    assert b"Completo" not in respuesta.data

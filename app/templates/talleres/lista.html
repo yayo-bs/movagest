@@ -1,6 +1,7 @@
 {# Lista actividades futuras y pasadas con el aforo y estado de inscripción.
    La administración puede acceder desde aquí a la creación de talleres. #}
 {% extends "base.html" %}
+{% from "_filtros.html" import filtros_listado %}
 
 {% block titulo %}Talleres | MovaGest{% endblock %}
 
@@ -10,6 +11,15 @@
         {% if current_user.es_administrador() %}
             <p><a href="{{ url_for('talleres.nuevo_taller') }}">Crear taller</a></p>
         {% endif %}
+        {% call filtros_listado(valores, [("fecha", "Fecha"), ("titulo", "Título")]) %}
+            <label>
+                Disponibilidad
+                <select name="plazas_libres">
+                    <option value="" {% if not valores.plazas_libres %}selected{% endif %}>Todas</option>
+                    <option value="si" {% if valores.plazas_libres == "si" %}selected{% endif %}>Con plazas libres</option>
+                </select>
+            </label>
+        {% endcall %}
         {% if talleres %}
             <ul>
                 {% for taller in talleres %}
@@ -25,8 +35,11 @@
                     </li>
                 {% endfor %}
             </ul>
+        {% elif hay_filtros %}
+            <p>No se encontraron resultados.</p>
         {% else %}
             <p>No hay talleres publicados.</p>
         {% endif %}
+        {% include "_paginacion.html" %}
     </section>
 {% endblock %}

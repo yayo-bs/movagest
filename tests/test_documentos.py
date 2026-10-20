@@ -17,10 +17,17 @@ def iniciar_sesion(cliente, usuario):
         sesion["_fresh"] = True
 
 
-def crear_documento(app, usuario, titulo, categoria, nombre="archivo.pdf"):
+def crear_documento(
+    app,
+    usuario,
+    titulo,
+    categoria,
+    nombre="archivo.pdf",
+    descripcion="Descripción de prueba",
+):
     documento = Documento(
         titulo=titulo,
-        descripcion="Descripción de prueba",
+        descripcion=descripcion,
         categoria=categoria,
         nombre_original=nombre,
         nombre_archivo=f"{titulo}.pdf",
@@ -198,6 +205,50 @@ def test_filtro_por_categoria(cliente, crear_usuario, app):
     assert b"Gu\xc3\xada" not in respuesta_actas.data
     assert b"Gu\xc3\xada" in respuesta_documentos.data
     assert b"Acta de reuni\xc3\xb3n" not in respuesta_documentos.data
+
+
+def test_listado_busca_en_titulo_y_descripcion(cliente, crear_usuario, app):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    crear_documento(
+        app, socio, "Acta anual", "acta", descripcion="Coreografía flamenca"
+    )
+    crear_documento(
+        app, socio, "Guía", "documento", descripcion="Música tradicional"
+    )
+    iniciar_sesion(cliente, socio)
+
+    respuesta = cliente.get("/documentos/?q=FLAMENCA")
+
+    assert b"Acta anual" in respuesta.data
+    assert b"Gu\xc3\xada" not in respuesta.data
+
+
+def test_listado_sin_coincidencias_muestra_mensaje_claro(
+    cliente, crear_usuario, app
+):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    crear_documento(app, socio, "Acta anual", "acta")
+    iniciar_sesion(cliente, socio)
+
+    respuesta = cliente.get("/documentos/?q=sin-coincidencia")
+
+    assert b"No se encontraron resultados" in respuesta.data
+    assert b"No hay archivos en esta categor\xc3\xada" not in respuesta.data
+
+
+def test_listado_ordena_por_titulo_en_ambas_direcciones(
+    cliente, crear_usuario, app
+):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    crear_documento(app, socio, "Zeta", "documento")
+    crear_documento(app, socio, "Alfa", "documento")
+    iniciar_sesion(cliente, socio)
+
+    ascendente = cliente.get("/documentos/?orden=titulo&dir=asc")
+    descendente = cliente.get("/documentos/?orden=titulo&dir=desc")
+
+    assert ascendente.data.index(b"Alfa") < ascendente.data.index(b"Zeta")
+    assert descendente.data.index(b"Zeta") < descendente.data.index(b"Alfa")
 
 
 def test_borrar_elimina_registro_y_archivo(app, cliente, crear_usuario):

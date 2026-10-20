@@ -5,31 +5,60 @@ Incluye el ciclo de vida de los usuarios y la revisión de sus altas.
 
 from datetime import datetime, timezone
 
-from flask import abort, flash, redirect, render_template, request, url_for
+from flask import (
+    abort,
+    current_app,
+    flash,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from flask_login import current_user
 
 from app.blueprints.admin import bp
 from app.decoradores import solo_administradores
 from app.extensiones import db
 from app.models import Inscripcion, Taller, Usuario
+from app.utilidades.listados import paginar_consulta, preparar_listado
 
 
 @bp.get("/altas")
 @solo_administradores
 def listar_altas():
-    estado = request.args.get("estado")
-    if estado and estado not in Usuario.ESTADOS:
+    estado_recibido = request.args.get("estado")
+    if estado_recibido and estado_recibido not in Usuario.ESTADOS:
         flash("El filtro de estado no es válido.", "warning")
-        estado = None
 
-    consulta = db.select(Usuario).order_by(Usuario.fecha_alta)
-    if estado:
-        consulta = consulta.where(Usuario.estado == estado)
-    usuarios = db.session.scalars(consulta).all()
+    consulta, valores = preparar_listado(
+        db.select(Usuario),
+        request.args,
+        [Usuario.nombre, Usuario.apellidos, Usuario.email],
+        {
+            "nombre": Usuario.nombre,
+            "fecha": Usuario.fecha_alta,
+        },
+        Usuario.fecha_alta.asc(),
+        filtros={
+            "estado": {
+                estado: Usuario.estado == estado
+                for estado in Usuario.ESTADOS
+            }
+        },
+        direccion_por_defecto="asc",
+    )
+    paginacion = paginar_consulta(
+        consulta,
+        request.args.get("pagina"),
+        current_app.config["POR_PAGINA"],
+    )
     return render_template(
         "admin/altas.html",
-        usuarios=usuarios,
-        estado_seleccionado=estado,
+        usuarios=paginacion.items,
+        paginacion=paginacion,
+        valores=valores,
+        parametros_paginacion=valores,
+        hay_filtros=bool(valores["q"] or valores["estado"]),
     )
 
 

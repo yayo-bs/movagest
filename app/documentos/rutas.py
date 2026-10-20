@@ -24,22 +24,40 @@ from app.documentos import bp
 from app.documentos.formularios import FormularioDocumento
 from app.extensiones import db
 from app.models import Documento
+from app.utilidades.listados import paginar_consulta, preparar_listado
 
 
 @bp.get("/")
 @login_required
 def listar_documentos():
-    consulta = db.select(Documento)
-    categoria = request.args.get("categoria")
-    if categoria in Documento.CATEGORIAS:
-        consulta = consulta.where(Documento.categoria == categoria)
-    documentos = db.session.scalars(
-        consulta.order_by(Documento.fecha_subida.desc())
-    ).all()
+    consulta, valores = preparar_listado(
+        db.select(Documento),
+        request.args,
+        [Documento.titulo, Documento.descripcion],
+        {
+            "fecha": Documento.fecha_subida,
+            "titulo": Documento.titulo,
+        },
+        Documento.fecha_subida.desc(),
+        filtros={
+            "categoria": {
+                categoria: Documento.categoria == categoria
+                for categoria in Documento.CATEGORIAS
+            }
+        },
+    )
+    paginacion = paginar_consulta(
+        consulta,
+        request.args.get("pagina"),
+        current_app.config["POR_PAGINA"],
+    )
     return render_template(
         "documentos/lista.html",
-        documentos=documentos,
-        categoria=categoria,
+        documentos=paginacion.items,
+        paginacion=paginacion,
+        valores=valores,
+        parametros_paginacion=valores,
+        hay_filtros=bool(valores["q"] or valores["categoria"]),
     )
 
 

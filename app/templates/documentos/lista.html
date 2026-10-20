@@ -1,20 +1,26 @@
 {# Muestra documentos y actas disponibles para usuarios autenticados.
    Las acciones de subida y borrado aparecen solo para administradores. #}
 {% extends "base.html" %}
+{% from "_filtros.html" import filtros_listado %}
 
 {% block titulo %}Documentos y actas | MovaGest{% endblock %}
 
 {% block contenido %}
     <section>
         <h1>Documentos y actas</h1>
-        <nav aria-label="Filtrar documentos">
-            <a href="{{ url_for('documentos.listar_documentos') }}">Todos</a>
-            <a href="{{ url_for('documentos.listar_documentos', categoria='documento') }}">Documentos</a>
-            <a href="{{ url_for('documentos.listar_documentos', categoria='acta') }}">Actas</a>
-        </nav>
         {% if current_user.es_administrador() %}
             <p><a href="{{ url_for('documentos.nuevo_documento') }}">Subir archivo</a></p>
         {% endif %}
+        {% call filtros_listado(valores, [("fecha", "Fecha"), ("titulo", "Título")]) %}
+            <label>
+                Categoría
+                <select name="categoria">
+                    <option value="" {% if not valores.categoria %}selected{% endif %}>Todas</option>
+                    <option value="documento" {% if valores.categoria == "documento" %}selected{% endif %}>Documento</option>
+                    <option value="acta" {% if valores.categoria == "acta" %}selected{% endif %}>Acta</option>
+                </select>
+            </label>
+        {% endcall %}
         {% if documentos %}
             <ul>
                 {% for documento in documentos %}
@@ -38,8 +44,11 @@
                     </li>
                 {% endfor %}
             </ul>
+        {% elif hay_filtros %}
+            <p>No se encontraron resultados.</p>
         {% else %}
             <p>No hay archivos en esta categoría.</p>
         {% endif %}
+        {% include "_paginacion.html" %}
     </section>
 {% endblock %}

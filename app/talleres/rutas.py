@@ -5,7 +5,15 @@ Los socios gestionan sus inscripciones y los administradores los talleres.
 
 from datetime import datetime, timezone
 
-from flask import abort, flash, redirect, render_template, request, url_for
+from flask import (
+    abort,
+    current_app,
+    flash,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from flask_login import current_user, login_required
 from sqlalchemy.exc import IntegrityError
 
@@ -14,6 +22,7 @@ from app.extensiones import db
 from app.models import Inscripcion, Taller
 from app.talleres import bp
 from app.talleres.formularios import FormularioTaller
+from app.utilidades.listados import paginar_consulta, preparar_listado
 
 
 def _fecha_con_zona(fecha):
@@ -37,10 +46,40 @@ def _guardar_taller(taller, formulario):
 @bp.get("/")
 @login_required
 def listar_talleres():
-    talleres = db.session.scalars(
-        db.select(Taller).order_by(Taller.fecha_hora.asc())
-    ).all()
-    return render_template("talleres/lista.html", talleres=talleres)
+    inscripciones = (
+        db.select(db.func.count(Inscripcion.id))
+        .where(Inscripcion.taller_id == Taller.id)
+        .scalar_subquery()
+    )
+    consulta, valores = preparar_listado(
+        db.select(Taller),
+        request.args,
+        [Taller.titulo, Taller.descripcion],
+        {
+            "fecha": Taller.fecha_hora,
+            "titulo": Taller.titulo,
+        },
+        Taller.fecha_hora.asc(),
+        filtros={
+            "plazas_libres": {
+                "si": inscripciones < Taller.plazas,
+            }
+        },
+        direccion_por_defecto="asc",
+    )
+    paginacion = paginar_consulta(
+        consulta,
+        request.args.get("pagina"),
+        current_app.config["POR_PAGINA"],
+    )
+    return render_template(
+        "talleres/lista.html",
+        talleres=paginacion.items,
+        paginacion=paginacion,
+        valores=valores,
+        parametros_paginacion=valores,
+        hay_filtros=bool(valores["q"] or valores["plazas_libres"]),
+    )
 
 
 @bp.get("/<int:id_taller>")

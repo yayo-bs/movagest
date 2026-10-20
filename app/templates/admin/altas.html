@@ -1,21 +1,26 @@
 {# Gestión administrativa de cuentas y solicitudes de alta.
    Los cambios de estado se envían mediante formularios POST con CSRF. #}
 {% extends "base.html" %}
+{% from "_filtros.html" import filtros_listado %}
 
 {% block titulo %}Gestión de socios | MovaGest{% endblock %}
 
 {% block contenido %}
     <section>
         <h1>Gestión de socios</h1>
-        <nav aria-label="Filtrar usuarios por estado">
-            <a href="{{ url_for('admin.listar_altas') }}">Todos</a>
-            {% for estado in ("pendiente", "activo", "rechazado", "baja") %}
-                <a href="{{ url_for('admin.listar_altas', estado=estado) }}">
-                    {{ estado|capitalize }}
-                </a>
-            {% endfor %}
-        </nav>
-
+        {% call filtros_listado(valores, [("nombre", "Nombre"), ("fecha", "Fecha de alta")]) %}
+            <label>
+                Estado
+                <select name="estado">
+                    <option value="" {% if not valores.estado %}selected{% endif %}>Todos</option>
+                    {% for estado in ("pendiente", "activo", "rechazado", "baja") %}
+                        <option value="{{ estado }}" {% if valores.estado == estado %}selected{% endif %}>
+                            {{ estado|capitalize }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </label>
+        {% endcall %}
         {% if usuarios %}
             <table>
                 <thead>
@@ -87,8 +92,11 @@
                     {% endfor %}
                 </tbody>
             </table>
+        {% elif hay_filtros %}
+            <p>No se encontraron resultados.</p>
         {% else %}
             <p>No hay usuarios para este filtro.</p>
         {% endif %}
+        {% include "_paginacion.html" %}
     </section>
 {% endblock %}

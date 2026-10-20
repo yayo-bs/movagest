@@ -314,3 +314,122 @@ def test_modelo_rechaza_tipo_no_permitido():
             lugar="Centro cultural",
             orden_del_dia="Puntos",
         )
+
+
+def test_listado_busca_en_titulo_y_orden_del_dia(cliente, crear_usuario):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    convocatoria = crear_asamblea(
+        socio,
+        "Asamblea anual",
+        datetime.now(timezone.utc) + timedelta(days=5),
+    )
+    convocatoria.orden_del_dia = "Presupuesto cultural"
+    crear_asamblea(
+        socio,
+        "Asamblea vecinal",
+        datetime.now(timezone.utc) + timedelta(days=6),
+    )
+    db.session.commit()
+    iniciar_sesion(cliente, socio)
+
+    respuesta = cliente.get("/asambleas/?q=CULTURAL")
+
+    assert b"Asamblea anual" in respuesta.data
+    assert b"Asamblea vecinal" not in respuesta.data
+
+
+def test_listado_sin_coincidencias_muestra_mensaje_claro(
+    cliente, crear_usuario
+):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    iniciar_sesion(cliente, socio)
+
+    respuesta = cliente.get("/asambleas/?q=inexistente")
+
+    assert b"No se encontraron resultados" in respuesta.data
+    assert b"No hay convocatorias publicadas" not in respuesta.data
+
+
+def test_listado_ordena_por_titulo_ascendente_y_descendente(
+    cliente, crear_usuario
+):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    fecha = datetime.now(timezone.utc) + timedelta(days=2)
+    crear_asamblea(socio, "Zeta", fecha)
+    crear_asamblea(socio, "Alfa", fecha)
+    iniciar_sesion(cliente, socio)
+
+    ascendente = cliente.get("/asambleas/?orden=titulo&dir=asc")
+    descendente = cliente.get("/asambleas/?orden=titulo&dir=desc")
+
+    assert ascendente.data.index(b"Alfa") < ascendente.data.index(b"Zeta")
+    assert descendente.data.index(b"Zeta") < descendente.data.index(b"Alfa")
+
+
+def test_filtros_de_tipo_y_periodo_se_aplican_en_la_consulta(
+    cliente, crear_usuario
+):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    crear_asamblea(
+        socio,
+        "Ordinaria futura",
+        datetime.now(timezone.utc) + timedelta(days=1),
+    )
+    extraordinaria = crear_asamblea(
+        socio,
+        "Extraordinaria pasada",
+        datetime.now(timezone.utc) - timedelta(days=1),
+    )
+    extraordinaria.tipo = "extraordinaria"
+    db.session.commit()
+    iniciar_sesion(cliente, socio)
+
+    respuesta = cliente.get(
+        "/asambleas/?tipo=extraordinaria&periodo=pasadas"
+    )
+
+    assert extraordinaria.titulo.encode() in respuesta.data
+    assert b"Ordinaria futura" not in respuesta.data
+
+
+def test_orden_predeterminado_compuesto_se_conserva_entre_paginas(
+    app, cliente, crear_usuario
+):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    app.config["POR_PAGINA"] = 2
+    crear_asamblea(
+        socio,
+        "Futura próxima",
+        datetime.now(timezone.utc) + timedelta(days=1),
+    )
+    crear_asamblea(
+        socio,
+        "Futura lejana",
+        datetime.now(timezone.utc) + timedelta(days=5),
+    )
+    crear_asamblea(
+        socio,
+        "Pasada reciente",
+        datetime.now(timezone.utc) - timedelta(days=1),
+    )
+    crear_asamblea(
+        socio,
+        "Pasada intermedia",
+        datetime.now(timezone.utc) - timedelta(days=3),
+    )
+    crear_asamblea(
+        socio,
+        "Pasada antigua",
+        datetime.now(timezone.utc) - timedelta(days=5),
+    )
+    iniciar_sesion(cliente, socio)
+
+    primera = cliente.get("/asambleas/")
+    segunda = cliente.get("/asambleas/?pagina=2")
+    tercera = cliente.get("/asambleas/?pagina=3")
+
+    assert b"Futura pr\xc3\xb3xima" in primera.data
+    assert b"Futura lejana" in primera.data
+    assert b"Pasada reciente" in segunda.data
+    assert b"Pasada intermedia" in segunda.data
+    assert b"Pasada antigua" in tercera.data
