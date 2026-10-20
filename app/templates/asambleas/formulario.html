@@ -1,0 +1,24 @@
+{# Formulario compartido para publicar y editar convocatorias de Asamblea.
+   Los errores de validación se muestran junto al campo correspondiente. #}
+{% extends "base.html" %}
+
+{% block titulo %}{% if asamblea %}Editar convocatoria{% else %}Nueva convocatoria{% endif %} | Asambleas{% endblock %}
+
+{% block contenido %}
+    <section class="formulario">
+        <h1>{% if asamblea %}Editar convocatoria{% else %}Nueva convocatoria{% endif %}</h1>
+        <form method="post">
+            {{ formulario.hidden_tag() }}
+            {% for campo in (formulario.titulo, formulario.tipo, formulario.fecha_hora, formulario.lugar, formulario.orden_del_dia) %}
+                <div class="campo">
+                    {{ campo.label }}
+                    {{ campo() }}
+                    {% for error in campo.errors %}
+                        <p class="error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            {{ formulario.guardar() }}
+        </form>
+    </section>
+{% endblock %}

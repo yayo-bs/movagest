@@ -1,0 +1,45 @@
+{# Muestra primero las convocatorias futuras y después las ya celebradas.
+   Las acciones de administración solo aparecen para el rol administrador. #}
+{% extends "base.html" %}
+
+{% block titulo %}Asambleas | MovaGest{% endblock %}
+
+{% block contenido %}
+    <section>
+        <h1>Asambleas</h1>
+        {% if current_user.es_administrador() %}
+            <p><a href="{{ url_for('asambleas.nueva_asamblea') }}">Nueva convocatoria</a></p>
+        {% endif %}
+
+        <h2>Próximas</h2>
+        {% if futuras %}
+            <ul>
+                {% for asamblea in futuras %}
+                    <li>
+                        <h3><a href="{{ url_for('asambleas.ver_asamblea', id_asamblea=asamblea.id) }}">{{ asamblea.titulo }}</a></h3>
+                        <p>{{ asamblea.fecha_hora.strftime("%d/%m/%Y %H:%M") }} · {{ asamblea.lugar }}</p>
+                        {% if current_user.es_administrador() %}
+                            <a href="{{ url_for('asambleas.editar_asamblea', id_asamblea=asamblea.id) }}">Editar</a>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No hay convocatorias próximas.</p>
+        {% endif %}
+
+        <h2>Pasadas</h2>
+        {% if pasadas %}
+            <ul>
+                {% for asamblea in pasadas %}
+                    <li>
+                        <h3><a href="{{ url_for('asambleas.ver_asamblea', id_asamblea=asamblea.id) }}">{{ asamblea.titulo }}</a></h3>
+                        <p>{{ asamblea.fecha_hora.strftime("%d/%m/%Y %H:%M") }} · {{ asamblea.lugar }}</p>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No hay convocatorias pasadas.</p>
+        {% endif %}
+    </section>
+{% endblock %}

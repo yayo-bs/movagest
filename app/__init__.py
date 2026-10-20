@@ -49,6 +49,7 @@ def create_app(configuracion=None):
     from app.blueprints.admin import bp as admin_bp
     from app.blueprints.auth import bp as auth_bp
     from app.blueprints.main import bp as main_bp
+    from app.asambleas import bp as asambleas_bp
     from app.comandos import registrar_comandos
     from app.documentos import bp as documentos_bp
     from app.noticias import bp as noticias_bp
@@ -58,6 +59,7 @@ def create_app(configuracion=None):
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(noticias_bp)
+    app.register_blueprint(asambleas_bp)
     app.register_blueprint(documentos_bp)
     app.register_blueprint(talleres_bp)
     registrar_comandos(app)
