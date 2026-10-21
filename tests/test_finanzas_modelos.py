@@ -39,7 +39,7 @@ def test_cuota_rechaza_estado_y_numero_recibo_invalidos():
 
 @pytest.mark.parametrize(
     "importe",
-    [Decimal("0"), Decimal("-1.00")],
+    [Decimal("0"), Decimal("-1.00"), Decimal("NaN"), Decimal("Infinity")],
 )
 @pytest.mark.parametrize("modelo", [Cuota, Movimiento])
 def test_modelos_rechazan_importes_no_positivos(modelo, importe):

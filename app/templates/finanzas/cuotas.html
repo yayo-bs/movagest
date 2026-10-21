@@ -1,0 +1,83 @@
+{# Lista cuotas, filtros y acciones administrativas según su estado. #}
+{% extends "base.html" %}
+{% from "_filtros.html" import filtros_listado %}
+
+{% block titulo %}Cuotas | MovaGest{% endblock %}
+
+{% block contenido %}
+    <section>
+        <h1>Cuotas de socios</h1>
+        <p><a href="{{ url_for('finanzas.generar_cuotas') }}">Generar cuotas del periodo</a></p>
+
+        {% call filtros_listado(valores, [("periodo", "Periodo"), ("socio", "Socio"), ("estado", "Estado")]) %}
+            <label>
+                Estado
+                <select name="estado">
+                    <option value="" {% if not valores.estado %}selected{% endif %}>Todos</option>
+                    {% for estado in ("pendiente", "pagada", "anulada") %}
+                        <option value="{{ estado }}" {% if valores.estado == estado %}selected{% endif %}>{{ estado|capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                Periodo
+                <select name="periodo">
+                    <option value="" {% if not valores.periodo %}selected{% endif %}>Todos</option>
+                    {% for periodo in periodos %}
+                        <option value="{{ periodo }}" {% if valores.periodo == periodo|string %}selected{% endif %}>{{ periodo }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+        {% endcall %}
+
+        {% if cuotas %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Socio</th>
+                        <th>Periodo</th>
+                        <th>Importe</th>
+                        <th>Estado</th>
+                        <th>Fecha de pago</th>
+                        <th>Recibo</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cuota in cuotas %}
+                        <tr>
+                            <td>{{ cuota.usuario.nombre }} {{ cuota.usuario.apellidos }} · {{ cuota.usuario.email }}</td>
+                            <td>{{ cuota.periodo }}</td>
+                            <td>{{ cuota.importe }}</td>
+                            <td>{{ cuota.estado|capitalize }}</td>
+                            <td>{% if cuota.fecha_pago %}{{ cuota.fecha_pago.strftime("%d/%m/%Y") }}{% else %}—{% endif %}</td>
+                            <td>{{ cuota.numero_recibo or "—" }}</td>
+                            <td>
+                                {% if cuota.estado == "pendiente" %}
+                                    <a href="{{ url_for('finanzas.editar_cuota', id_cuota=cuota.id) }}">Editar importe</a>
+                                    <a href="{{ url_for('finanzas.pagar_cuota', id_cuota=cuota.id) }}">Marcar pagada</a>
+                                    <form method="post" action="{{ url_for('finanzas.eliminar_cuota', id_cuota=cuota.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit">Eliminar</button>
+                                    </form>
+                                {% elif cuota.estado == "pagada" %}
+                                    <form method="post" action="{{ url_for('finanzas.anular_cuota', id_cuota=cuota.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit">Anular</button>
+                                    </form>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% elif hay_filtros %}
+            <p>No se encontraron cuotas.</p>
+        {% else %}
+            <p>No hay cuotas registradas.</p>
+        {% endif %}
+        {% include "_paginacion.html" %}
+    </section>
+{% endblock %}

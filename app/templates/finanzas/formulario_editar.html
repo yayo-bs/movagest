@@ -1,0 +1,22 @@
+{# Formulario para actualizar el importe de una cuota pendiente. #}
+{% extends "base.html" %}
+
+{% block titulo %}Editar cuota | MovaGest{% endblock %}
+
+{% block contenido %}
+    <section class="formulario">
+        <h1>Editar cuota de {{ cuota.usuario.nombre }} {{ cuota.usuario.apellidos }}</h1>
+        <p>Periodo: {{ cuota.periodo }}</p>
+        <form method="post">
+            {{ formulario.hidden_tag() }}
+            <div class="campo">
+                {{ formulario.importe.label }}
+                {{ formulario.importe() }}
+                {% for error in formulario.importe.errors %}
+                    <p class="error">{{ error }}</p>
+                {% endfor %}
+            </div>
+            {{ formulario.guardar() }}
+        </form>
+    </section>
+{% endblock %}

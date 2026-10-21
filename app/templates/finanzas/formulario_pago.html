@@ -1,0 +1,22 @@
+{# Formulario para registrar el pago de una cuota con fecha editable. #}
+{% extends "base.html" %}
+
+{% block titulo %}Registrar pago | MovaGest{% endblock %}
+
+{% block contenido %}
+    <section class="formulario">
+        <h1>Registrar pago de cuota</h1>
+        <p>{{ cuota.usuario.nombre }} {{ cuota.usuario.apellidos }} · {{ cuota.periodo }} · {{ cuota.importe }}</p>
+        <form method="post">
+            {{ formulario.hidden_tag() }}
+            <div class="campo">
+                {{ formulario.fecha_pago.label }}
+                {{ formulario.fecha_pago() }}
+                {% for error in formulario.fecha_pago.errors %}
+                    <p class="error">{{ error }}</p>
+                {% endfor %}
+            </div>
+            {{ formulario.guardar() }}
+        </form>
+    </section>
+{% endblock %}

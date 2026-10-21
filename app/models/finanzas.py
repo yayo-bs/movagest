@@ -50,7 +50,7 @@ class Cuota(db.Model):
     def validar_importe(self, clave, valor):
         if not isinstance(valor, Decimal):
             raise TypeError("El importe debe ser un valor Decimal.")
-        if valor <= Decimal("0"):
+        if not valor.is_finite() or valor <= Decimal("0"):
             raise ValueError("El importe debe ser mayor que cero.")
         return valor
 
@@ -90,6 +90,6 @@ class Movimiento(db.Model):
     def validar_importe(self, clave, valor):
         if not isinstance(valor, Decimal):
             raise TypeError("El importe debe ser un valor Decimal.")
-        if valor <= Decimal("0"):
+        if not valor.is_finite() or valor <= Decimal("0"):
             raise ValueError("El importe debe ser mayor que cero.")
         return valor

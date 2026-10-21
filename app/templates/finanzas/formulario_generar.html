@@ -1,0 +1,23 @@
+{# Formulario administrativo para generar cuotas anuales pendientes. #}
+{% extends "base.html" %}
+
+{% block titulo %}Generar cuotas | MovaGest{% endblock %}
+
+{% block contenido %}
+    <section class="formulario">
+        <h1>Generar cuotas del periodo</h1>
+        <form method="post">
+            {{ formulario.hidden_tag() }}
+            {% for campo in (formulario.periodo, formulario.importe) %}
+                <div class="campo">
+                    {{ campo.label }}
+                    {{ campo() }}
+                    {% for error in campo.errors %}
+                        <p class="error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            {{ formulario.guardar() }}
+        </form>
+    </section>
+{% endblock %}

@@ -7,3 +7,5 @@ from flask import Blueprint
 
 
 bp = Blueprint("finanzas", __name__, url_prefix="/finanzas")
+
+from app.finanzas import rutas  # noqa: E402,F401
