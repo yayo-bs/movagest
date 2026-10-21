@@ -196,6 +196,11 @@ def eliminar_cuota(id_cuota):
     cuota = db.get_or_404(Cuota, id_cuota)
     if cuota.estado != "pendiente":
         flash("Solo se pueden eliminar cuotas pendientes.", "warning")
+    elif cuota.numero_recibo is not None:
+        flash(
+            "No se pueden eliminar cuotas con un recibo emitido.",
+            "warning",
+        )
     else:
         db.session.delete(cuota)
         db.session.commit()

@@ -56,10 +56,12 @@
                                 {% if cuota.estado == "pendiente" %}
                                     <a href="{{ url_for('finanzas.editar_cuota', id_cuota=cuota.id) }}">Editar importe</a>
                                     <a href="{{ url_for('finanzas.pagar_cuota', id_cuota=cuota.id) }}">Marcar pagada</a>
-                                    <form method="post" action="{{ url_for('finanzas.eliminar_cuota', id_cuota=cuota.id) }}">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit">Eliminar</button>
-                                    </form>
+                                    {% if cuota.numero_recibo is none %}
+                                        <form method="post" action="{{ url_for('finanzas.eliminar_cuota', id_cuota=cuota.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit">Eliminar</button>
+                                        </form>
+                                    {% endif %}
                                 {% elif cuota.estado == "pagada" %}
                                     <form method="post" action="{{ url_for('finanzas.anular_cuota', id_cuota=cuota.id) }}">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

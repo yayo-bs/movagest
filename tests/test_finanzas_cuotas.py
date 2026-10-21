@@ -214,16 +214,12 @@ def test_fecha_de_pago_futura_no_cambia_la_cuota(
     assert cuota.numero_recibo is None
 
 
-def test_solo_se_pueden_editar_y_eliminar_cuotas_pendientes(
-    cliente, crear_usuario
-):
+def test_cuota_pagada_no_se_puede_editar_ni_eliminar(cliente, crear_usuario):
     administrador = crear_usuario(
         email="admin@example.com",
         rol="administrador",
         estado="activo",
     )
-    socio = crear_usuario(email="socio@example.com", estado="activo")
-    cuota_pendiente = crear_cuota(socio)
     cuota_pagada = crear_cuota(
         crear_usuario(
             email="pagada@example.com",
@@ -244,16 +240,33 @@ def test_solo_se_pueden_editar_y_eliminar_cuotas_pendientes(
         f"/finanzas/cuotas/{cuota_pagada.id}/eliminar",
         follow_redirects=True,
     )
-    eliminar_pendiente = cliente.post(
-        f"/finanzas/cuotas/{cuota_pendiente.id}/eliminar"
-    )
 
     assert cuota_pagada.importe == Decimal("25.00")
     assert cuota_pagada.estado == "pagada"
     assert "Solo se puede editar".encode() in editar_pagada.data
     assert "Solo se pueden eliminar".encode() in eliminar_pagada.data
     assert db.session.get(Cuota, cuota_pagada.id) is not None
-    assert db.session.get(Cuota, cuota_pendiente.id) is None
+
+
+def test_eliminar_cuota_pendiente_sin_recibo_esta_permitido(
+    cliente, crear_usuario
+):
+    administrador = crear_usuario(
+        email="admin@example.com",
+        rol="administrador",
+        estado="activo",
+    )
+    cuota = crear_cuota(
+        crear_usuario(email="socia@example.com", estado="activo")
+    )
+    iniciar_sesion(cliente, administrador)
+
+    respuesta = cliente.post(
+        f"/finanzas/cuotas/{cuota.id}/eliminar",
+    )
+
+    assert respuesta.status_code == 302
+    assert db.session.get(Cuota, cuota.id) is None
 
 
 def test_editar_importe_de_cuota_pendiente(cliente, crear_usuario):
@@ -447,6 +460,73 @@ def test_reactivar_y_volver_a_pagar_conserva_recibo_y_siguiente_no_duplica(
             Cuota.numero_recibo == "R-2026-0001"
         )
     ) == 1
+
+
+def test_eliminar_cuota_con_recibo_tras_anular_y_reactivar_se_rechaza(
+    cliente, crear_usuario
+):
+    administrador = crear_usuario(
+        email="admin@example.com",
+        rol="administrador",
+        estado="activo",
+    )
+    cuota = crear_cuota(
+        crear_usuario(email="socia@example.com", estado="activo"),
+        estado="pagada",
+        fecha_pago=date(2026, 2, 10),
+        numero_recibo="R-2026-0001",
+    )
+    iniciar_sesion(cliente, administrador)
+
+    cliente.post(
+        f"/finanzas/cuotas/{cuota.id}/anular",
+    )
+    cliente.post(
+        f"/finanzas/cuotas/{cuota.id}/reactivar",
+        data={"confirmar_reactivacion": "si"},
+    )
+    respuesta_eliminar = cliente.post(
+        f"/finanzas/cuotas/{cuota.id}/eliminar",
+        follow_redirects=True,
+    )
+
+    assert cuota.estado == "pendiente"
+    assert db.session.get(Cuota, cuota.id) is not None
+    assert "No se pueden eliminar cuotas con un recibo emitido.".encode() in (
+        respuesta_eliminar.data
+    )
+
+
+def test_listado_no_muestra_eliminar_para_cuota_con_recibo_reactivada(
+    cliente, crear_usuario
+):
+    administrador = crear_usuario(
+        email="admin@example.com",
+        rol="administrador",
+        estado="activo",
+    )
+    cuota = crear_cuota(
+        crear_usuario(email="socia@example.com", estado="activo"),
+        estado="pagada",
+        fecha_pago=date(2026, 2, 10),
+        numero_recibo="R-2026-0001",
+    )
+    iniciar_sesion(cliente, administrador)
+    cliente.post(f"/finanzas/cuotas/{cuota.id}/anular")
+    cliente.post(
+        f"/finanzas/cuotas/{cuota.id}/reactivar",
+        data={"confirmar_reactivacion": "si"},
+    )
+
+    respuesta_listado = cliente.get("/finanzas/cuotas")
+
+    assert cuota.estado == "pendiente"
+    assert db.session.get(Cuota, cuota.id) is not None
+    assert (
+        f"/finanzas/cuotas/{cuota.id}/eliminar".encode()
+        not in respuesta_listado.data
+    )
+    assert b">Eliminar</button>" not in respuesta_listado.data
 
 
 @pytest.mark.parametrize(
