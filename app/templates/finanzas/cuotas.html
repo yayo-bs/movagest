@@ -65,6 +65,15 @@
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit">Anular</button>
                                     </form>
+                                {% elif cuota.estado == "anulada" %}
+                                    <form method="post" action="{{ url_for('finanzas.reactivar_cuota', id_cuota=cuota.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <label>
+                                            <input type="checkbox" name="confirmar_reactivacion" value="si" required>
+                                            Confirmar reactivación
+                                        </label>
+                                        <button type="submit">Reactivar</button>
+                                    </form>
                                 {% else %}
                                     —
                                 {% endif %}

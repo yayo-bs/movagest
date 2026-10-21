@@ -165,16 +165,17 @@ def pagar_cuota(id_cuota):
     formulario = FormularioPagoCuota()
     if formulario.validate_on_submit():
         fecha_pago = formulario.fecha_pago.data
-        numero = _numero_recibo_siguiente(fecha_pago.year)
-        if numero > 9999:
-            flash(
-                "No se pueden asignar más recibos para este año.",
-                "danger",
-            )
-            return redirect(url_for("finanzas.listar_cuotas"))
+        if cuota.numero_recibo is None:
+            numero = _numero_recibo_siguiente(fecha_pago.year)
+            if numero > 9999:
+                flash(
+                    "No se pueden asignar más recibos para este año.",
+                    "danger",
+                )
+                return redirect(url_for("finanzas.listar_cuotas"))
+            cuota.numero_recibo = f"R-{fecha_pago.year:04d}-{numero:04d}"
 
         cuota.fecha_pago = fecha_pago
-        cuota.numero_recibo = f"R-{fecha_pago.year:04d}-{numero:04d}"
         cuota.estado = "pagada"
         db.session.commit()
         flash(
@@ -212,4 +213,20 @@ def anular_cuota(id_cuota):
         cuota.estado = "anulada"
         db.session.commit()
         flash("La cuota se ha anulado y el recibo se conserva.", "success")
+    return redirect(url_for("finanzas.listar_cuotas"))
+
+
+@bp.post("/cuotas/<int:id_cuota>/reactivar")
+@solo_administradores
+def reactivar_cuota(id_cuota):
+    cuota = db.get_or_404(Cuota, id_cuota)
+    if cuota.estado != "anulada":
+        flash("Solo se pueden reactivar cuotas anuladas.", "warning")
+    elif request.form.get("confirmar_reactivacion") != "si":
+        flash("Confirma que deseas reactivar esta cuota.", "warning")
+    else:
+        cuota.estado = "pendiente"
+        cuota.fecha_pago = None
+        db.session.commit()
+        flash("La cuota se ha reactivado y conserva su recibo.", "success")
     return redirect(url_for("finanzas.listar_cuotas"))

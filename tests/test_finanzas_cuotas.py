@@ -44,9 +44,10 @@ def test_socio_no_accede_a_rutas_de_gestion(cliente, crear_usuario):
         cliente.post(f"/finanzas/cuotas/{cuota.id}/pagar"),
         cliente.post(f"/finanzas/cuotas/{cuota.id}/eliminar"),
         cliente.post(f"/finanzas/cuotas/{cuota.id}/anular"),
+        cliente.post(f"/finanzas/cuotas/{cuota.id}/reactivar"),
     ]
 
-    assert [respuesta.status_code for respuesta in respuestas] == [403] * 7
+    assert [respuesta.status_code for respuesta in respuestas] == [403] * 8
 
 
 def test_usuario_anonimo_se_redirige_al_login(cliente):
@@ -316,6 +317,136 @@ def test_anular_conserva_recibo_y_no_permite_transiciones_invalidas(
     assert cuota_pendiente.estado == "pendiente"
     assert cuota_pagada.estado == "anulada"
     assert cuota_pagada.numero_recibo == "R-2026-0001"
+
+
+def test_reactivar_cuota_anulada_conserva_recibo_y_limpia_fecha_pago(
+    cliente, crear_usuario
+):
+    administrador = crear_usuario(
+        email="admin@example.com",
+        rol="administrador",
+        estado="activo",
+    )
+    cuota = crear_cuota(
+        crear_usuario(email="socia@example.com", estado="activo"),
+        estado="anulada",
+        fecha_pago=date(2026, 2, 10),
+        numero_recibo="R-2026-0001",
+    )
+    iniciar_sesion(cliente, administrador)
+
+    respuesta = cliente.post(
+        f"/finanzas/cuotas/{cuota.id}/reactivar",
+        data={"confirmar_reactivacion": "si"},
+        follow_redirects=True,
+    )
+
+    assert respuesta.status_code == 200
+    assert cuota.estado == "pendiente"
+    assert cuota.fecha_pago is None
+    assert cuota.numero_recibo == "R-2026-0001"
+
+
+def test_reactivar_sin_confirmacion_no_cambia_la_cuota(
+    cliente, crear_usuario
+):
+    administrador = crear_usuario(
+        email="admin@example.com",
+        rol="administrador",
+        estado="activo",
+    )
+    cuota = crear_cuota(
+        crear_usuario(email="socia@example.com", estado="activo"),
+        estado="anulada",
+        fecha_pago=date(2026, 2, 10),
+        numero_recibo="R-2026-0001",
+    )
+    iniciar_sesion(cliente, administrador)
+
+    respuesta = cliente.post(
+        f"/finanzas/cuotas/{cuota.id}/reactivar",
+        follow_redirects=True,
+    )
+
+    assert b"Confirma que deseas reactivar esta cuota." in respuesta.data
+    assert cuota.estado == "anulada"
+    assert cuota.fecha_pago == date(2026, 2, 10)
+    assert cuota.numero_recibo == "R-2026-0001"
+
+
+@pytest.mark.parametrize("estado", ["pendiente", "pagada"])
+def test_reactivar_cuota_no_anulada_se_rechaza(
+    cliente, crear_usuario, estado
+):
+    administrador = crear_usuario(
+        email="admin@example.com",
+        rol="administrador",
+        estado="activo",
+    )
+    campos = {}
+    if estado == "pagada":
+        campos = {
+            "fecha_pago": date(2026, 2, 10),
+            "numero_recibo": "R-2026-0001",
+        }
+    cuota = crear_cuota(
+        crear_usuario(email=f"{estado}@example.com", estado="activo"),
+        estado=estado,
+        **campos,
+    )
+    iniciar_sesion(cliente, administrador)
+
+    respuesta = cliente.post(
+        f"/finanzas/cuotas/{cuota.id}/reactivar",
+        data={"confirmar_reactivacion": "si"},
+        follow_redirects=True,
+    )
+
+    assert b"Solo se pueden reactivar cuotas anuladas." in respuesta.data
+    assert cuota.estado == estado
+
+
+def test_reactivar_y_volver_a_pagar_conserva_recibo_y_siguiente_no_duplica(
+    cliente, crear_usuario
+):
+    administrador = crear_usuario(
+        email="admin@example.com",
+        rol="administrador",
+        estado="activo",
+    )
+    socia = crear_usuario(email="socia@example.com", estado="activo")
+    cuota = crear_cuota(
+        socia,
+        estado="anulada",
+        fecha_pago=date(2026, 2, 10),
+        numero_recibo="R-2026-0001",
+    )
+    siguiente = crear_cuota(
+        crear_usuario(email="siguiente@example.com", estado="activo"),
+    )
+    iniciar_sesion(cliente, administrador)
+
+    cliente.post(
+        f"/finanzas/cuotas/{cuota.id}/reactivar",
+        data={"confirmar_reactivacion": "si"},
+    )
+    cliente.post(
+        f"/finanzas/cuotas/{cuota.id}/pagar",
+        data={"fecha_pago": "2026-03-01"},
+    )
+    cliente.post(
+        f"/finanzas/cuotas/{siguiente.id}/pagar",
+        data={"fecha_pago": "2026-03-02"},
+    )
+
+    assert cuota.estado == "pagada"
+    assert cuota.numero_recibo == "R-2026-0001"
+    assert siguiente.numero_recibo == "R-2026-0002"
+    assert db.session.scalar(
+        db.select(db.func.count(Cuota.id)).where(
+            Cuota.numero_recibo == "R-2026-0001"
+        )
+    ) == 1
 
 
 @pytest.mark.parametrize(

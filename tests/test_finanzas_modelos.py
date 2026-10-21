@@ -29,6 +29,21 @@ def test_cuota_usa_estado_pendiente_y_acepta_datos_validos(app, crear_usuario):
     assert cuota.fecha_pago is None
 
 
+def test_cuota_pendiente_puede_conservar_numero_recibo(app, crear_usuario):
+    usuario = crear_usuario(email="socia@example.com")
+    cuota = Cuota(
+        usuario=usuario,
+        periodo=2026,
+        importe=Decimal("25.50"),
+        numero_recibo="R-2026-0001",
+    )
+    db.session.add(cuota)
+    db.session.commit()
+
+    assert cuota.estado == "pendiente"
+    assert cuota.numero_recibo == "R-2026-0001"
+
+
 def test_cuota_rechaza_estado_y_numero_recibo_invalidos():
     with pytest.raises(ValueError, match="Estado de cuota no permitido"):
         Cuota(estado="vencida")
