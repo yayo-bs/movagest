@@ -52,6 +52,7 @@ def create_app(configuracion=None):
     from app.asambleas import bp as asambleas_bp
     from app.comandos import registrar_comandos
     from app.documentos import bp as documentos_bp
+    from app.finanzas import bp as finanzas_bp
     from app.noticias import bp as noticias_bp
     from app.talleres import bp as talleres_bp
 
@@ -61,6 +62,7 @@ def create_app(configuracion=None):
     app.register_blueprint(noticias_bp)
     app.register_blueprint(asambleas_bp)
     app.register_blueprint(documentos_bp)
+    app.register_blueprint(finanzas_bp)
     app.register_blueprint(talleres_bp)
     registrar_comandos(app)
 
