@@ -52,7 +52,13 @@
                             <td>{{ cuota.importe }}</td>
                             <td>{{ cuota.estado|capitalize }}</td>
                             <td>{% if cuota.fecha_pago %}{{ cuota.fecha_pago.strftime("%d/%m/%Y") }}{% else %}—{% endif %}</td>
-                            <td>{{ cuota.numero_recibo or "—" }}</td>
+                            <td>
+                                {% if cuota.numero_recibo and cuota.estado == "pagada" %}
+                                    <a href="{{ url_for('finanzas.descargar_recibo', id_cuota=cuota.id) }}">{{ cuota.numero_recibo }}</a>
+                                {% else %}
+                                    {{ cuota.numero_recibo or "—" }}
+                                {% endif %}
+                            </td>
                             <td>
                                 {% if cuota.estado == "pendiente" %}
                                     <a href="{{ url_for('finanzas.editar_cuota', id_cuota=cuota.id) }}">Editar importe</a>

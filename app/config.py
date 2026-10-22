@@ -8,6 +8,7 @@ import os
 
 class ConfiguracionBase:
     SECRET_KEY = os.getenv("SECRET_KEY", "clave-insegura-solo-desarrollo")
+    NOMBRE_ASOCIACION = os.getenv("NOMBRE_ASOCIACION", "MovaGest")
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL", "sqlite:///movagest.db"
     )

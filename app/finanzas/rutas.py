@@ -7,13 +7,16 @@ from datetime import date
 from decimal import Decimal
 
 from flask import (
+    abort,
     current_app,
     flash,
     redirect,
     render_template,
     request,
+    send_file,
     url_for,
 )
+from flask_login import current_user, login_required
 
 from app.decoradores import solo_administradores
 from app.extensiones import db
@@ -28,6 +31,7 @@ from app.finanzas.formularios import (
     FormularioMovimiento,
     FormularioPagoCuota,
 )
+from app.finanzas.recibos import generar_recibo_pdf
 from app.models import Cuota, Movimiento, Usuario
 from app.utilidades.listados import paginar_consulta, preparar_listado
 
@@ -395,3 +399,24 @@ def reactivar_cuota(id_cuota):
         db.session.commit()
         flash("La cuota se ha reactivado y conserva su recibo.", "success")
     return redirect(url_for("finanzas.listar_cuotas"))
+
+
+@bp.get("/cuotas/<int:id_cuota>/recibo")
+@login_required
+def descargar_recibo(id_cuota):
+    cuota = db.get_or_404(Cuota, id_cuota)
+    if cuota.estado != "pagada":
+        abort(404)
+    if not current_user.es_administrador() and cuota.usuario_id != current_user.id:
+        abort(404)
+
+    archivo = generar_recibo_pdf(
+        cuota,
+        current_app.config.get("NOMBRE_ASOCIACION", "MovaGest"),
+    )
+    return send_file(
+        archivo,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"{cuota.numero_recibo}.pdf",
+    )
