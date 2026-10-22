@@ -1,0 +1,48 @@
+{# Muestra las cuotas de la persona autenticada y sus recibos disponibles. #}
+{% extends "base.html" %}
+
+{% block titulo %}Mis cuotas | MovaGest{% endblock %}
+
+{% block contenido %}
+    <section>
+        <h1>Mis cuotas</h1>
+        {% if cuotas %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Periodo</th>
+                        <th>Importe</th>
+                        <th>Estado</th>
+                        <th>Fecha de pago</th>
+                        <th>Recibo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cuota in cuotas %}
+                        <tr>
+                            <td>{{ cuota.periodo }}</td>
+                            <td>{{ cuota.importe }}</td>
+                            <td>{{ cuota.estado|capitalize }}</td>
+                            <td>
+                                {% if cuota.fecha_pago %}
+                                    {{ cuota.fecha_pago.strftime("%d/%m/%Y") }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if cuota.estado == "pagada" and cuota.numero_recibo %}
+                                    <a href="{{ url_for('finanzas.descargar_recibo', id_cuota=cuota.id) }}">Descargar {{ cuota.numero_recibo }}</a>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Aún no tienes cuotas registradas.</p>
+        {% endif %}
+    </section>
+{% endblock %}

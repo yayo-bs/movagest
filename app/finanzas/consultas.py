@@ -29,3 +29,12 @@ def anios_resumen():
     anios = {fecha.year for fecha in fechas_movimientos + fechas_cuotas}
     anios.add(date.today().year)
     return sorted(anios, reverse=True)
+
+
+def obtener_cuotas_usuario(id_usuario):
+    """Devuelve las cuotas de una persona, de periodo más reciente a antiguo."""
+    return db.session.scalars(
+        db.select(Cuota)
+        .where(Cuota.usuario_id == id_usuario)
+        .order_by(Cuota.periodo.desc())
+    ).all()

@@ -7,6 +7,13 @@
 {% block contenido %}
     <h1>Hola, {{ usuario.nombre }}</h1>
 
+    {% if not current_user.es_administrador() %}
+        <section>
+            <h2>Mis cuotas</h2>
+            <p><a href="{{ url_for('finanzas.mis_cuotas') }}">Consultar mis cuotas y recibos</a></p>
+        </section>
+    {% endif %}
+
     <section>
         <h2>Últimas noticias</h2>
         {% if noticias %}
@@ -103,6 +110,7 @@
                 <li><a href="{{ url_for('noticias.nueva_noticia') }}">Crear noticia</a></li>
                 <li><a href="{{ url_for('asambleas.nueva_asamblea') }}">Crear convocatoria de Asamblea</a></li>
                 <li><a href="{{ url_for('admin.listar_altas') }}">Gestión de socios</a></li>
+                <li><a href="{{ url_for('finanzas.listar_movimientos') }}">Finanzas</a></li>
             </ul>
         </section>
     {% endif %}

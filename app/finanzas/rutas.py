@@ -23,6 +23,7 @@ from app.extensiones import db
 from app.finanzas import bp
 from app.finanzas.consultas import (
     anios_resumen,
+    obtener_cuotas_usuario,
     periodos_de_cuotas,
 )
 from app.finanzas.formularios import (
@@ -420,3 +421,10 @@ def descargar_recibo(id_cuota):
         as_attachment=True,
         download_name=f"{cuota.numero_recibo}.pdf",
     )
+
+
+@bp.get("/mis-cuotas")
+@login_required
+def mis_cuotas():
+    cuotas = obtener_cuotas_usuario(current_user.id)
+    return render_template("finanzas/mis_cuotas.html", cuotas=cuotas)
