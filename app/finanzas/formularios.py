@@ -7,9 +7,18 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from flask_wtf import FlaskForm
-from wtforms import DateField, DecimalField, IntegerField, SubmitField
+from wtforms import (
+    DateField,
+    DecimalField,
+    IntegerField,
+    SelectField,
+    StringField,
+    SubmitField,
+)
 from wtforms.validators import (
+    DataRequired,
     InputRequired,
+    Length,
     NumberRange,
     ValidationError,
 )
@@ -76,3 +85,32 @@ class FormularioPagoCuota(FlaskForm):
         default=date.today,
     )
     guardar = SubmitField("Marcar como pagada")
+
+
+class FormularioMovimiento(FlaskForm):
+    """Valida los datos de un ingreso o gasto."""
+
+    tipo = SelectField(
+        "Tipo",
+        choices=[("ingreso", "Ingreso"), ("gasto", "Gasto")],
+        validators=[DataRequired()],
+    )
+    concepto = StringField(
+        "Concepto",
+        validators=[DataRequired(), Length(max=200)],
+    )
+    importe = DecimalField(
+        "Importe",
+        places=2,
+        validators=[InputRequired(), validar_importe_positivo],
+    )
+    fecha = DateField(
+        "Fecha",
+        validators=[InputRequired()],
+        default=date.today,
+    )
+    categoria = StringField(
+        "Categoría",
+        validators=[Length(max=100)],
+    )
+    guardar = SubmitField("Guardar movimiento")

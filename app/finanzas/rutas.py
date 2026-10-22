@@ -1,7 +1,10 @@
-"""Rutas administrativas para gestionar cuotas de socios.
+"""Rutas administrativas para gestionar cuotas y movimientos financieros.
 
 Cada modificación comprueba el estado permitido y se realiza mediante POST.
 """
+
+from datetime import date
+from decimal import Decimal
 
 from flask import (
     current_app,
@@ -15,13 +18,17 @@ from flask import (
 from app.decoradores import solo_administradores
 from app.extensiones import db
 from app.finanzas import bp
-from app.finanzas.consultas import periodos_de_cuotas
+from app.finanzas.consultas import (
+    anios_resumen,
+    periodos_de_cuotas,
+)
 from app.finanzas.formularios import (
     FormularioEditarCuota,
     FormularioGenerarCuotas,
+    FormularioMovimiento,
     FormularioPagoCuota,
 )
-from app.models import Cuota, Usuario
+from app.models import Cuota, Movimiento, Usuario
 from app.utilidades.listados import paginar_consulta, preparar_listado
 
 
@@ -63,6 +70,159 @@ def _numero_recibo_siguiente(anio):
     if ultimo_numero is None:
         return 1
     return int(ultimo_numero[-4:]) + 1
+
+
+def _sumar_importes(consulta):
+    """Suma importes con Decimal y evita convertir valores a float."""
+    importes = db.session.scalars(consulta).all()
+    return sum(importes, Decimal("0.00"))
+
+
+def _resumen_financiero(anio):
+    """Calcula ingresos, cuotas cobradas, gastos y saldo del año."""
+    desde = date(anio, 1, 1)
+    hasta = date(anio + 1, 1, 1)
+    rango_movimientos = (
+        Movimiento.fecha >= desde,
+        Movimiento.fecha < hasta,
+    )
+    rango_cuotas = (
+        Cuota.fecha_pago >= desde,
+        Cuota.fecha_pago < hasta,
+    )
+    ingresos = _sumar_importes(
+        db.select(Movimiento.importe).where(
+            Movimiento.tipo == "ingreso",
+            *rango_movimientos,
+        )
+    )
+    gastos = _sumar_importes(
+        db.select(Movimiento.importe).where(
+            Movimiento.tipo == "gasto",
+            *rango_movimientos,
+        )
+    )
+    cuotas_cobradas = _sumar_importes(
+        db.select(Cuota.importe).where(
+            Cuota.estado == "pagada",
+            *rango_cuotas,
+        )
+    )
+    return {
+        "ingresos": ingresos,
+        "cuotas_cobradas": cuotas_cobradas,
+        "gastos": gastos,
+        "saldo": ingresos + cuotas_cobradas - gastos,
+    }
+
+
+def _guardar_movimiento(movimiento, formulario):
+    """Copia al modelo los datos validados del formulario."""
+    movimiento.tipo = formulario.tipo.data
+    movimiento.concepto = formulario.concepto.data.strip()
+    movimiento.importe = formulario.importe.data
+    movimiento.fecha = formulario.fecha.data
+    movimiento.categoria = formulario.categoria.data.strip() or None
+
+
+@bp.get("/movimientos")
+@solo_administradores
+def listar_movimientos():
+    anios = anios_resumen()
+    valores_solicitados = request.args.to_dict()
+    anio_seleccionado = valores_solicitados.get("anio", str(date.today().year))
+    if anio_seleccionado not in {str(anio) for anio in anios}:
+        anio_seleccionado = str(date.today().year)
+    valores_solicitados["anio"] = anio_seleccionado
+
+    filtros_anio = {
+        str(anio): db.and_(
+            Movimiento.fecha >= date(anio, 1, 1),
+            Movimiento.fecha < date(anio + 1, 1, 1),
+        )
+        for anio in anios
+    }
+    consulta, valores = preparar_listado(
+        db.select(Movimiento),
+        valores_solicitados,
+        [Movimiento.concepto],
+        {
+            "fecha": Movimiento.fecha,
+            "concepto": Movimiento.concepto,
+            "importe": Movimiento.importe,
+        },
+        Movimiento.fecha.desc(),
+        filtros={
+            "tipo": {
+                tipo: Movimiento.tipo == tipo
+                for tipo in Movimiento.TIPOS
+            },
+            "anio": filtros_anio,
+        },
+        direccion_por_defecto="desc",
+    )
+    paginacion = paginar_consulta(
+        consulta,
+        request.args.get("pagina"),
+        current_app.config["POR_PAGINA"],
+    )
+    return render_template(
+        "finanzas/movimientos.html",
+        movimientos=paginacion.items,
+        anios=anios,
+        resumen=_resumen_financiero(int(anio_seleccionado)),
+        paginacion=paginacion,
+        valores=valores,
+        parametros_paginacion=valores,
+        hay_filtros=bool(
+            valores["q"] or valores["tipo"] or valores["anio"]
+        ),
+    )
+
+
+@bp.route("/movimientos/nuevo", methods=["GET", "POST"])
+@solo_administradores
+def nuevo_movimiento():
+    formulario = FormularioMovimiento()
+    if formulario.validate_on_submit():
+        movimiento = Movimiento()
+        _guardar_movimiento(movimiento, formulario)
+        db.session.add(movimiento)
+        db.session.commit()
+        flash("El movimiento se ha creado correctamente.", "success")
+        return redirect(url_for("finanzas.listar_movimientos"))
+    return render_template(
+        "finanzas/formulario_movimiento.html",
+        formulario=formulario,
+        movimiento=None,
+    )
+
+
+@bp.route("/movimientos/<int:id_movimiento>/editar", methods=["GET", "POST"])
+@solo_administradores
+def editar_movimiento(id_movimiento):
+    movimiento = db.get_or_404(Movimiento, id_movimiento)
+    formulario = FormularioMovimiento(obj=movimiento)
+    if formulario.validate_on_submit():
+        _guardar_movimiento(movimiento, formulario)
+        db.session.commit()
+        flash("El movimiento se ha actualizado correctamente.", "success")
+        return redirect(url_for("finanzas.listar_movimientos"))
+    return render_template(
+        "finanzas/formulario_movimiento.html",
+        formulario=formulario,
+        movimiento=movimiento,
+    )
+
+
+@bp.post("/movimientos/<int:id_movimiento>/eliminar")
+@solo_administradores
+def eliminar_movimiento(id_movimiento):
+    movimiento = db.get_or_404(Movimiento, id_movimiento)
+    db.session.delete(movimiento)
+    db.session.commit()
+    flash("El movimiento se ha eliminado correctamente.", "success")
+    return redirect(url_for("finanzas.listar_movimientos"))
 
 
 @bp.get("/cuotas")

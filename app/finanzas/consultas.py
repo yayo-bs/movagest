@@ -1,10 +1,12 @@
-"""Consultas auxiliares para los listados de cuotas.
+"""Consultas auxiliares para los listados financieros.
 
-Construye las opciones de periodo disponibles para filtrar los resultados.
+Obtiene los periodos existentes en cuotas y movimientos.
 """
 
+from datetime import date
+
 from app.extensiones import db
-from app.models import Cuota
+from app.models import Cuota, Movimiento
 
 
 def periodos_de_cuotas():
@@ -12,3 +14,18 @@ def periodos_de_cuotas():
     return db.session.scalars(
         db.select(Cuota.periodo).distinct().order_by(Cuota.periodo.desc())
     ).all()
+
+
+def anios_resumen():
+    """Incluye años con movimientos o cuotas pagadas, además del año actual."""
+    fechas_movimientos = db.session.scalars(
+        db.select(Movimiento.fecha).distinct()
+    ).all()
+    fechas_cuotas = db.session.scalars(
+        db.select(Cuota.fecha_pago)
+        .where(Cuota.estado == "pagada", Cuota.fecha_pago.is_not(None))
+        .distinct()
+    ).all()
+    anios = {fecha.year for fecha in fechas_movimientos + fechas_cuotas}
+    anios.add(date.today().year)
+    return sorted(anios, reverse=True)

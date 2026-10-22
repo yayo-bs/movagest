@@ -1,0 +1,23 @@
+{# Formulario administrativo común para crear o editar un movimiento. #}
+{% extends "base.html" %}
+
+{% block titulo %}{% if movimiento %}Editar movimiento{% else %}Nuevo movimiento{% endif %} | MovaGest{% endblock %}
+
+{% block contenido %}
+    <section class="formulario">
+        <h1>{% if movimiento %}Editar movimiento{% else %}Nuevo movimiento{% endif %}</h1>
+        <form method="post">
+            {{ formulario.hidden_tag() }}
+            {% for campo in (formulario.tipo, formulario.concepto, formulario.importe, formulario.fecha, formulario.categoria) %}
+                <div class="campo">
+                    {{ campo.label }}
+                    {{ campo() }}
+                    {% for error in campo.errors %}
+                        <p class="error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            {{ formulario.guardar() }}
+        </form>
+    </section>
+{% endblock %}

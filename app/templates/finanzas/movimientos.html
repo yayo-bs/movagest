@@ -1,0 +1,85 @@
+{# Presenta los movimientos, filtros y resumen económico del periodo. #}
+{% extends "base.html" %}
+{% from "_filtros.html" import filtros_listado %}
+
+{% block titulo %}Finanzas | MovaGest{% endblock %}
+
+{% block contenido %}
+    <section>
+        <h1>Finanzas</h1>
+        <p>
+            <a href="{{ url_for('finanzas.listar_cuotas') }}">Gestionar cuotas</a>
+            ·
+            <a href="{{ url_for('finanzas.nuevo_movimiento') }}">Añadir movimiento</a>
+        </p>
+
+        <h2>Resumen de {{ valores.anio }}</h2>
+        <dl>
+            <dt>Ingresos registrados</dt>
+            <dd>{{ resumen.ingresos }}</dd>
+            <dt>Cuotas cobradas</dt>
+            <dd>{{ resumen.cuotas_cobradas }}</dd>
+            <dt>Gastos</dt>
+            <dd>{{ resumen.gastos }}</dd>
+            <dt>Saldo</dt>
+            <dd>{{ resumen.saldo }}</dd>
+        </dl>
+
+        {% call filtros_listado(valores, [("fecha", "Fecha"), ("concepto", "Concepto"), ("importe", "Importe")]) %}
+            <label>
+                Tipo
+                <select name="tipo">
+                    <option value="" {% if not valores.tipo %}selected{% endif %}>Todos</option>
+                    <option value="ingreso" {% if valores.tipo == "ingreso" %}selected{% endif %}>Ingresos</option>
+                    <option value="gasto" {% if valores.tipo == "gasto" %}selected{% endif %}>Gastos</option>
+                </select>
+            </label>
+            <label>
+                Año
+                <select name="anio">
+                    {% for anio in anios %}
+                        <option value="{{ anio }}" {% if valores.anio == anio|string %}selected{% endif %}>{{ anio }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+        {% endcall %}
+
+        {% if movimientos %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Concepto</th>
+                        <th>Categoría</th>
+                        <th>Importe</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for movimiento in movimientos %}
+                        <tr>
+                            <td>{{ movimiento.fecha.strftime("%d/%m/%Y") }}</td>
+                            <td>{{ movimiento.tipo|capitalize }}</td>
+                            <td>{{ movimiento.concepto }}</td>
+                            <td>{{ movimiento.categoria or "—" }}</td>
+                            <td>{{ movimiento.importe }}</td>
+                            <td>
+                                <a href="{{ url_for('finanzas.editar_movimiento', id_movimiento=movimiento.id) }}">Editar</a>
+                                <form method="post" action="{{ url_for('finanzas.eliminar_movimiento', id_movimiento=movimiento.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit">Eliminar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% elif hay_filtros %}
+            <p>No se encontraron movimientos para este periodo.</p>
+        {% else %}
+            <p>No hay movimientos registrados.</p>
+        {% endif %}
+        {% include "_paginacion.html" %}
+    </section>
+{% endblock %}
