@@ -128,7 +128,7 @@ def test_borrar_requiere_confirmacion(cliente, crear_usuario):
 
     assert respuesta.status_code == 200
     assert db.session.get(Noticia, noticia.id) is not None
-    assert "Confirma que deseas borrar esta noticia.".encode() in respuesta.data
+    assert "Confirma que deseas eliminar esta noticia.".encode() in respuesta.data
 
 
 def test_detalle_de_noticia_inexistente_devuelve_404(cliente, crear_usuario):

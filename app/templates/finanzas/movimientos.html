@@ -8,26 +8,33 @@
     <section class="tarjeta">
         <header class="cabecera-pagina">
             <h1>Finanzas</h1>
-            <p>
-                <a href="{{ url_for('finanzas.listar_cuotas') }}">Gestionar cuotas</a>
-                ·
+            <div class="acciones-cabecera">
                 <a class="boton" href="{{ url_for('finanzas.nuevo_movimiento') }}">Añadir movimiento</a>
-            </p>
+                <a class="boton-secundario" href="{{ url_for('finanzas.listar_cuotas') }}">Gestionar cuotas</a>
+            </div>
         </header>
 
         <h2>Resumen de {{ valores.anio }}</h2>
-        <dl>
-            <dt>Ingresos registrados</dt>
-            <dd>{{ resumen.ingresos }}</dd>
-            <dt>Cuotas cobradas</dt>
-            <dd>{{ resumen.cuotas_cobradas }}</dd>
-            <dt>Gastos</dt>
-            <dd>{{ resumen.gastos }}</dd>
-            <dt>Saldo</dt>
-            <dd>{{ resumen.saldo }}</dd>
+        <dl class="tarjetas-resumen">
+            <div class="tarjeta-resumen">
+                <dt>Ingresos registrados</dt>
+                <dd>{{ resumen.ingresos|euros }}</dd>
+            </div>
+            <div class="tarjeta-resumen">
+                <dt>Cuotas cobradas</dt>
+                <dd>{{ resumen.cuotas_cobradas|euros }}</dd>
+            </div>
+            <div class="tarjeta-resumen">
+                <dt>Gastos</dt>
+                <dd>{{ resumen.gastos|euros }}</dd>
+            </div>
+            <div class="tarjeta-resumen">
+                <dt>Saldo</dt>
+                <dd>{{ resumen.saldo|euros }}</dd>
+            </div>
         </dl>
 
-        {% call filtros_listado(valores, [("fecha", "Fecha"), ("concepto", "Concepto"), ("importe", "Importe")]) %}
+        {% call filtros_listado(valores, [("fecha", "Fecha"), ("concepto", "Concepto"), ("importe", "Importe")], filtros_predeterminados={"anio": anio_actual()|string}) %}
             <label>
                 Tipo
                 <select name="tipo">
@@ -48,7 +55,7 @@
 
         {% if movimientos %}
             <div class="tabla-responsive">
-            <table>
+            <table class="tabla-movimientos">
                 <thead>
                     <tr>
                         <th>Fecha</th>
@@ -62,17 +69,24 @@
                 <tbody>
                     {% for movimiento in movimientos %}
                         <tr>
-                            <td>{{ movimiento.fecha.strftime("%d/%m/%Y") }}</td>
+                            <td>{{ movimiento.fecha|fecha_es }}</td>
                             <td>{{ movimiento.tipo|capitalize }}</td>
                             <td>{{ movimiento.concepto }}</td>
                             <td>{{ movimiento.categoria or "—" }}</td>
-                            <td>{{ movimiento.importe }}</td>
+                            <td>{{ movimiento.importe|euros }}</td>
                             <td>
-                                <a class="boton-secundario" href="{{ url_for('finanzas.editar_movimiento', id_movimiento=movimiento.id) }}">Editar</a>
-                                <form method="post" action="{{ url_for('finanzas.eliminar_movimiento', id_movimiento=movimiento.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button class="boton-peligro" type="submit">Eliminar</button>
-                                </form>
+                                <div class="acciones-fila">
+                                    <a class="boton-secundario boton-compacto" href="{{ url_for('finanzas.editar_movimiento', id_movimiento=movimiento.id) }}">Editar</a>
+                                    <details class="acciones-mas">
+                                        <summary class="boton-secundario boton-compacto">Más</summary>
+                                        <div class="acciones-mas-panel">
+                                            <form method="post" action="{{ url_for('finanzas.eliminar_movimiento', id_movimiento=movimiento.id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button class="boton-peligro boton-compacto" type="submit">Eliminar</button>
+                                            </form>
+                                        </div>
+                                    </details>
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}

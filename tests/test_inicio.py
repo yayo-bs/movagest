@@ -96,7 +96,9 @@ def test_inicio_muestra_tres_noticias_mas_recientes(
     assert b"Noticia 1" not in respuesta.data
     assert b"Noticia 0" not in respuesta.data
     assert b"/noticias/5" in respuesta.data
-    assert ahora.strftime("%d/%m/%Y").encode() in respuesta.data
+    assert (ahora + timedelta(minutes=4)).strftime(
+        "%d/%m/%Y %H:%M"
+    ).encode() in respuesta.data
     assert b"Ver todas" in respuesta.data
 
 
@@ -174,8 +176,7 @@ def test_inicio_muestra_solo_la_proxima_asamblea_futura(
     assert b"Extraordinaria" in respuesta.data
     assert b"Sala principal" in respuesta.data
     assert b"/asambleas/2" in respuesta.data
-    assert fecha_cercana.strftime("%d/%m/%Y").encode() in respuesta.data
-    assert fecha_cercana.strftime("%H:%M").encode() in respuesta.data
+    assert fecha_cercana.strftime("%d/%m/%Y %H:%M").encode() in respuesta.data
 
 
 def test_inicio_muestra_hasta_tres_talleres_futuros_con_plazas(
@@ -274,7 +275,7 @@ def test_administrador_ve_bloque_y_numero_de_altas_pendientes(
     assert b"Solicitudes pendientes: 2" in respuesta.data
     assert b"estado=pendiente" in respuesta.data
     assert b"Crear noticia" in respuesta.data
-    assert b"Crear convocatoria de Asamblea" in respuesta.data
+    assert b"Crear convocatoria" in respuesta.data
     assert "Gestión de socios".encode() in respuesta.data
 
 

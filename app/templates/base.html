@@ -3,6 +3,7 @@
 <!doctype html>
 <html lang="es">
 <head>
+    <script>document.documentElement.classList.add("js");</script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block titulo %}MovaGest{% endblock %}</title>
@@ -10,31 +11,52 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/navegacion.js') }}" defer></script>
 </head>
 <body>
     <header class="cabecera">
         <a class="marca" href="{% if current_user.is_authenticated %}{{ url_for('main.inicio') }}{% else %}{{ url_for('main.home_publica') }}{% endif %}">MovaGest</a>
-        <nav aria-label="Navegación principal">
+        <button class="boton-menu" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="navegacion-principal">
+            <span aria-hidden="true">☰</span>
+        </button>
+        <button class="menu-overlay" type="button" aria-label="Cerrar menú" tabindex="-1"></button>
+        <nav id="navegacion-principal" aria-label="Principal" aria-hidden="false">
+            <button class="boton-cerrar-menu" type="button" aria-label="Cerrar menú"><span aria-hidden="true">×</span></button>
             {% if current_user.is_authenticated %}
-                <a href="{{ url_for('main.inicio') }}">Inicio</a>
-                <span>{{ current_user.nombre }}</span>
-                <a href="{{ url_for('noticias.listar_noticias') }}">Noticias</a>
-                <a href="{{ url_for('asambleas.listar_asambleas') }}">Asambleas</a>
-                <a href="{{ url_for('documentos.listar_documentos') }}">Documentos</a>
-                <a href="{{ url_for('talleres.listar_talleres') }}">Talleres</a>
-                <a href="{{ url_for('finanzas.mis_cuotas') }}">Mis cuotas</a>
+                <a {% if request.endpoint == "main.inicio" %}aria-current="page" {% endif %}href="{{ url_for('main.inicio') }}">Inicio</a>
+                <details class="menu-grupo{% if request.blueprint in ('noticias', 'asambleas', 'talleres', 'documentos') %} activo{% endif %}">
+                    <summary>Comunidad</summary>
+                    <div class="menu-panel">
+                        <a {% if request.blueprint == "noticias" %}aria-current="page" {% endif %}href="{{ url_for('noticias.listar_noticias') }}">Noticias</a>
+                        <a {% if request.blueprint == "asambleas" %}aria-current="page" {% endif %}href="{{ url_for('asambleas.listar_asambleas') }}">Asambleas</a>
+                        <a {% if request.blueprint == "talleres" %}aria-current="page" {% endif %}href="{{ url_for('talleres.listar_talleres') }}">Talleres</a>
+                        <a {% if request.blueprint == "documentos" %}aria-current="page" {% endif %}href="{{ url_for('documentos.listar_documentos') }}">Documentos</a>
+                    </div>
+                </details>
                 {% if current_user.es_administrador() %}
-                    <a href="{{ url_for('admin.listar_altas') }}">Gestión de socios</a>
-                    <a href="{{ url_for('finanzas.listar_movimientos') }}">Finanzas</a>
+                    <details class="menu-grupo{% if request.blueprint == 'admin' or request.endpoint in ('finanzas.listar_movimientos', 'finanzas.listar_cuotas') %} activo{% endif %}">
+                        <summary>Administración</summary>
+                        <div class="menu-panel">
+                            <a {% if request.blueprint == "admin" %}aria-current="page" {% endif %}href="{{ url_for('admin.listar_altas') }}">Gestión de socios</a>
+                            <a {% if request.endpoint == "finanzas.listar_movimientos" %}aria-current="page" {% endif %}href="{{ url_for('finanzas.listar_movimientos') }}">Finanzas</a>
+                            <a {% if request.endpoint == "finanzas.listar_cuotas" %}aria-current="page" {% endif %}href="{{ url_for('finanzas.listar_cuotas') }}">Gestionar cuotas</a>
+                        </div>
+                    </details>
                 {% endif %}
-                <form class="formulario-salida" method="post" action="{{ url_for('auth.logout') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button class="boton-secundario" type="submit">Salir</button>
-                </form>
+                <details class="menu-grupo menu-cuenta{% if request.endpoint == 'finanzas.mis_cuotas' %} activo{% endif %}">
+                    <summary>{{ current_user.nombre or current_user.email }}</summary>
+                    <div class="menu-panel">
+                        <a {% if request.endpoint == "finanzas.mis_cuotas" %}aria-current="page" {% endif %}href="{{ url_for('finanzas.mis_cuotas') }}">Mis cuotas</a>
+                        <form class="formulario-salida" method="post" action="{{ url_for('auth.logout') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="boton-secundario" type="submit">Salir</button>
+                        </form>
+                    </div>
+                </details>
             {% else %}
-                <a href="{{ url_for('main.home_publica') }}">Inicio</a>
-                <a href="{{ url_for('auth.login') }}">Entrar</a>
-                <a href="{{ url_for('auth.registro') }}">Solicitar alta</a>
+                <a {% if request.endpoint == "main.home_publica" %}aria-current="page" {% endif %}href="{{ url_for('main.home_publica') }}">Inicio</a>
+                <a {% if request.endpoint == "auth.login" %}aria-current="page" {% endif %}href="{{ url_for('auth.login') }}">Entrar</a>
+                <a {% if request.endpoint == "auth.registro" %}aria-current="page" {% endif %}href="{{ url_for('auth.registro') }}">Solicitar alta</a>
             {% endif %}
         </nav>
     </header>

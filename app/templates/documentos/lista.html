@@ -28,7 +28,7 @@
                 {% for documento in documentos %}
                     <li>
                         <h2>{{ documento.titulo }}</h2>
-                        <p>{{ documento.categoria|capitalize }} · {{ documento.fecha_subida.strftime("%d/%m/%Y %H:%M") }}</p>
+                        <p>{{ documento.categoria|capitalize }} · {{ documento.fecha_subida|fecha_es }}</p>
                         {% if documento.descripcion %}
                             <p>{{ documento.descripcion }}</p>
                         {% endif %}
@@ -38,9 +38,9 @@
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <label>
                                     <input type="checkbox" name="confirmar_borrado" value="si" required>
-                                    Confirmo que quiero borrar este archivo.
+                                    Confirmo que quiero eliminar este archivo.
                                 </label>
-                                <button class="boton-peligro" type="submit">Borrar</button>
+                                <button class="boton-peligro" type="submit">Eliminar</button>
                             </form>
                         {% endif %}
                     </li>

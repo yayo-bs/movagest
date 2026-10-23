@@ -12,6 +12,7 @@ load_dotenv()
 
 from app.config import CONFIGURACIONES
 from app.extensiones import csrf, db, login_manager
+from app.utilidades.formatos import anio_actual, formato_euros, formato_fecha
 
 
 def create_app(configuracion=None):
@@ -45,6 +46,9 @@ def create_app(configuracion=None):
     login_manager.login_message = "Inicia sesión para acceder a esta página."
     login_manager.login_message_category = "info"
     csrf.init_app(app)
+    app.add_template_filter(formato_euros, "euros")
+    app.add_template_filter(formato_fecha, "fecha_es")
+    app.add_template_global(anio_actual, "anio_actual")
 
     from app.blueprints.admin import bp as admin_bp
     from app.blueprints.auth import bp as auth_bp

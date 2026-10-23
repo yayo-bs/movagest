@@ -9,32 +9,32 @@
         <h1>Mis cuotas</h1>
         {% if cuotas %}
             <div class="tabla-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Periodo</th>
-                        <th>Importe</th>
-                        <th>Estado</th>
-                        <th>Fecha de pago</th>
-                        <th>Recibo</th>
+            <table class="tabla-tarjetas" role="table">
+                <thead role="rowgroup">
+                    <tr role="row">
+                        <th role="columnheader">Periodo</th>
+                        <th role="columnheader">Importe</th>
+                        <th role="columnheader">Estado</th>
+                        <th role="columnheader">Fecha de pago</th>
+                        <th role="columnheader">Recibo</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody role="rowgroup">
                     {% for cuota in cuotas %}
-                        <tr>
-                            <td>{{ cuota.periodo }}</td>
-                            <td>{{ cuota.importe }}</td>
-                            <td>{{ etiqueta_estado(cuota.estado, cuota.estado|capitalize) }}</td>
-                            <td>
+                        <tr role="row">
+                            <td role="cell" data-label="Periodo">{{ cuota.periodo }}</td>
+                            <td role="cell" data-label="Importe">{{ cuota.importe|euros }}</td>
+                            <td role="cell" data-label="Estado">{{ etiqueta_estado(cuota.estado, cuota.estado|capitalize) }}</td>
+                            <td role="cell" data-label="Fecha de pago">
                                 {% if cuota.fecha_pago %}
-                                    {{ cuota.fecha_pago.strftime("%d/%m/%Y") }}
+                                    {{ cuota.fecha_pago|fecha_es }}
                                 {% else %}
                                     —
                                 {% endif %}
                             </td>
-                            <td>
+                            <td role="cell" data-label="Recibo">
                                 {% if cuota.estado == "pagada" and cuota.numero_recibo %}
-                                    <a class="boton" href="{{ url_for('finanzas.descargar_recibo', id_cuota=cuota.id) }}">Descargar {{ cuota.numero_recibo }}</a>
+                                    <a class="boton boton-compacto" href="{{ url_for('finanzas.descargar_recibo', id_cuota=cuota.id) }}">Descargar {{ cuota.numero_recibo }}</a>
                                 {% else %}
                                     —
                                 {% endif %}

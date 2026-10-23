@@ -7,70 +7,30 @@
 {% block contenido %}
     <h1>Hola, {{ usuario.nombre }}</h1>
 
-    {% if not current_user.es_administrador() %}
-        <section>
-            <h2>Mis cuotas</h2>
-            <p><a href="{{ url_for('finanzas.mis_cuotas') }}">Consultar mis cuotas y recibos</a></p>
+    <div class="inicio-grid">
+        <section class="tarjeta">
+            <h2>Próxima asamblea</h2>
+            {% if asamblea %}
+                <p>
+                    <a href="{{ url_for('asambleas.ver_asamblea', id_asamblea=asamblea.id) }}">{{ asamblea.titulo }}</a>
+                    · {{ asamblea.tipo|capitalize }}
+                    · {{ asamblea.fecha_hora|fecha_es }}
+                    · {{ asamblea.lugar }}
+                </p>
+            {% else %}
+                <p>No hay asambleas convocadas</p>
+            {% endif %}
+            <a href="{{ url_for('asambleas.listar_asambleas') }}">Ver asambleas</a>
         </section>
-    {% endif %}
 
-    <section>
-        <h2>Últimas noticias</h2>
-        {% if noticias %}
-            <ul>
-                {% for noticia in noticias %}
-                    <li>
-                        <a href="{{ url_for('noticias.ver_noticia', id_noticia=noticia.id) }}">{{ noticia.titulo }}</a>
-                        · {{ noticia.fecha_publicacion.strftime("%d/%m/%Y") }}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No hay noticias publicadas.</p>
-        {% endif %}
-        <a href="{{ url_for('noticias.listar_noticias') }}">Ver todas</a>
-    </section>
-
-    <section>
-        <h2>Próxima asamblea</h2>
-        {% if asamblea %}
-            <p>
-                <a href="{{ url_for('asambleas.ver_asamblea', id_asamblea=asamblea.id) }}">{{ asamblea.titulo }}</a>
-                · {{ asamblea.tipo|capitalize }}
-                · {{ asamblea.fecha_hora.strftime("%d/%m/%Y") }}
-                · {{ asamblea.fecha_hora.strftime("%H:%M") }}
-                · {{ asamblea.lugar }}
-            </p>
-        {% else %}
-            <p>No hay asambleas convocadas</p>
-        {% endif %}
-        <a href="{{ url_for('asambleas.listar_asambleas') }}">Ver asambleas</a>
-    </section>
-
-    <section>
-        <h2>Talleres con plazas libres</h2>
-        {% if talleres %}
-            <ul>
-                {% for taller in talleres %}
-                    <li>
-                        <a href="{{ url_for('talleres.ver_taller', id_taller=taller.id) }}">{{ taller.titulo }}</a>
-                        · {{ taller.fecha_hora.strftime("%d/%m/%Y %H:%M") }}
-                        · {{ taller.plazas_libres }} plazas libres
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No hay próximos talleres con plazas libres.</p>
-        {% endif %}
-
-        <section id="mis-inscripciones">
-            <h3>Mis inscripciones</h3>
+        <section class="tarjeta" id="mis-inscripciones">
+            <h2>Mis inscripciones</h2>
             {% if inscripciones %}
                 <ul>
                     {% for inscripcion in inscripciones %}
                         <li>
                             <a href="{{ url_for('talleres.ver_taller', id_taller=inscripcion.taller.id) }}">{{ inscripcion.taller.titulo }}</a>
-                            · {{ inscripcion.taller.fecha_hora.strftime("%d/%m/%Y %H:%M") }}
+                            · {{ inscripcion.taller.fecha_hora|fecha_es }}
                         </li>
                     {% endfor %}
                 </ul>
@@ -78,28 +38,69 @@
                 <p>No tienes inscripciones a talleres futuros.</p>
             {% endif %}
         </section>
-        <a href="{{ url_for('talleres.listar_talleres') }}">Ver talleres</a>
-    </section>
 
-    <section>
-        <h2>Últimos documentos</h2>
-        {% if documentos %}
-            <ul>
-                {% for documento in documentos %}
-                    <li>
-                        {{ documento.titulo }}
-                        · {{ documento.fecha_subida.strftime("%d/%m/%Y") }}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No hay documentos disponibles.</p>
+        {% if not current_user.es_administrador() %}
+            <section class="tarjeta">
+                <h2>Mis cuotas</h2>
+                <p><a href="{{ url_for('finanzas.mis_cuotas') }}">Consultar mis cuotas y recibos</a></p>
+            </section>
         {% endif %}
-        <a href="{{ url_for('documentos.listar_documentos') }}">Ver documentos y actas</a>
-    </section>
+
+        <section class="tarjeta">
+            <h2>Talleres con plazas libres</h2>
+            {% if talleres %}
+                <ul>
+                    {% for taller in talleres %}
+                        <li>
+                            <a href="{{ url_for('talleres.ver_taller', id_taller=taller.id) }}">{{ taller.titulo }}</a>
+                            · {{ taller.fecha_hora|fecha_es }}
+                            · {{ taller.plazas_libres }} plazas libres
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No hay próximos talleres con plazas libres.</p>
+            {% endif %}
+            <a href="{{ url_for('talleres.listar_talleres') }}">Ver talleres</a>
+        </section>
+
+        <section class="tarjeta">
+            <h2>Últimas noticias</h2>
+            {% if noticias %}
+                <ul>
+                    {% for noticia in noticias %}
+                        <li>
+                            <a href="{{ url_for('noticias.ver_noticia', id_noticia=noticia.id) }}">{{ noticia.titulo }}</a>
+                            · {{ noticia.fecha_publicacion|fecha_es }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No hay noticias publicadas.</p>
+            {% endif %}
+            <a href="{{ url_for('noticias.listar_noticias') }}">Ver todas</a>
+        </section>
+
+        <section class="tarjeta">
+            <h2>Últimos documentos</h2>
+            {% if documentos %}
+                <ul>
+                    {% for documento in documentos %}
+                        <li>
+                            {{ documento.titulo }}
+                            · {{ documento.fecha_subida|fecha_es }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No hay documentos disponibles.</p>
+            {% endif %}
+            <a href="{{ url_for('documentos.listar_documentos') }}">Ver documentos y actas</a>
+        </section>
+    </div>
 
     {% if current_user.es_administrador() %}
-        <section>
+        <section class="tarjeta inicio-gestion">
             <h2>Administración</h2>
             <p>
                 <a href="{{ url_for('admin.listar_altas', estado='pendiente') }}">
@@ -108,7 +109,7 @@
             </p>
             <ul>
                 <li><a class="boton" href="{{ url_for('noticias.nueva_noticia') }}">Crear noticia</a></li>
-                <li><a class="boton" href="{{ url_for('asambleas.nueva_asamblea') }}">Crear convocatoria de Asamblea</a></li>
+                <li><a class="boton" href="{{ url_for('asambleas.nueva_asamblea') }}">Crear convocatoria</a></li>
                 <li><a href="{{ url_for('admin.listar_altas') }}">Gestión de socios</a></li>
                 <li><a href="{{ url_for('finanzas.listar_movimientos') }}">Finanzas</a></li>
             </ul>

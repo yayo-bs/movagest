@@ -185,9 +185,9 @@ def editar_taller(id_taller):
 def borrar_taller(id_taller):
     taller = db.get_or_404(Taller, id_taller)
     if request.form.get("confirmar_borrado") != "si":
-        flash("Confirma que deseas borrar este taller.", "warning")
+        flash("Confirma que deseas eliminar este taller.", "warning")
         return redirect(url_for("talleres.ver_taller", id_taller=taller.id))
     db.session.delete(taller)
     db.session.commit()
-    flash("El taller se ha borrado correctamente.", "success")
+    flash("El taller se ha eliminado correctamente.", "success")
     return redirect(url_for("talleres.listar_talleres"))

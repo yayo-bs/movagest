@@ -125,9 +125,9 @@ def nuevo_documento():
 def borrar_documento(id_documento):
     documento = db.get_or_404(Documento, id_documento)
     if request.form.get("confirmar_borrado") != "si":
-        flash("Confirma que deseas borrar este archivo.", "warning")
+        flash("Confirma que deseas eliminar este archivo.", "warning")
         return redirect(url_for("documentos.listar_documentos"))
 
     _eliminar_documento(documento)
-    flash("El archivo se ha borrado correctamente.", "success")
+    flash("El archivo se ha eliminado correctamente.", "success")
     return redirect(url_for("documentos.listar_documentos"))

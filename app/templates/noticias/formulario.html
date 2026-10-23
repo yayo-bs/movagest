@@ -19,6 +19,7 @@
                 </div>
             {% endfor %}
             {{ formulario.guardar(class_="boton") }}
+            <a class="boton-secundario" href="{{ url_for('noticias.listar_noticias') }}">Cancelar</a>
         </form>
     </section>
 {% endblock %}

@@ -188,7 +188,7 @@ def test_reconsiderar_usuario_no_rechazado_no_cambia_estado(
     )
 
     assert db.session.get(Usuario, pendiente.id).estado == "pendiente"
-    assert b"Solo se pueden reconsiderar usuarios rechazados." in respuesta.data
+    assert b"Solo se pueden reconsiderar socios rechazados." in respuesta.data
 
 
 def test_eliminar_rechazado_sin_contenido_libera_el_correo(
@@ -283,7 +283,7 @@ def test_eliminar_rechazado_rechaza_estado_o_rol_no_permitido(
     if rol == "administrador":
         assert b"cuentas de administrador" in respuesta.data
     else:
-        assert b"Solo se pueden eliminar usuarios rechazados." in respuesta.data
+        assert b"Solo se pueden eliminar socios rechazados." in respuesta.data
 
 
 def test_administrador_no_puede_eliminarse_a_si_mismo(
@@ -439,7 +439,7 @@ def test_listado_admin_muestra_mensaje_sin_resultados(
     respuesta = cliente.get("/admin/altas?q=persona-inexistente")
 
     assert b"No se encontraron resultados" in respuesta.data
-    assert b"No hay usuarios para este filtro" not in respuesta.data
+    assert b"No hay socios para este filtro" not in respuesta.data
 
 
 def test_listado_admin_ordena_por_nombre_en_ambas_direcciones(
@@ -599,7 +599,7 @@ def test_reactivar_usuario_que_no_esta_de_baja_se_rechaza(
     )
 
     assert db.session.get(Usuario, activo.id).estado == "activo"
-    assert b"Solo se pueden reactivar usuarios que est\xc3\xa9n de baja." in respuesta.data
+    assert b"Solo se pueden reactivar socios que est\xc3\xa9n de baja." in respuesta.data
 
 
 @pytest.mark.parametrize("estado", ["pendiente", "rechazado", "baja"])
@@ -622,7 +622,7 @@ def test_dar_de_baja_a_usuario_no_activo_se_rechaza(
     )
 
     assert db.session.get(Usuario, usuario.id).estado == estado
-    assert b"Solo se puede dar de baja a usuarios activos." in respuesta.data
+    assert b"Solo se puede dar de baja a socios activos." in respuesta.data
 
 
 def test_no_se_puede_dar_de_baja_a_si_mismo(cliente, crear_usuario):

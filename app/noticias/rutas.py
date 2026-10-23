@@ -98,10 +98,10 @@ def editar_noticia(id_noticia):
 def borrar_noticia(id_noticia):
     noticia = db.get_or_404(Noticia, id_noticia)
     if request.form.get("confirmar_borrado") != "si":
-        flash("Confirma que deseas borrar esta noticia.", "warning")
+        flash("Confirma que deseas eliminar esta noticia.", "warning")
         return redirect(url_for("noticias.ver_noticia", id_noticia=noticia.id))
 
     db.session.delete(noticia)
     db.session.commit()
-    flash("La noticia se ha borrado correctamente.", "success")
+    flash("La noticia se ha eliminado correctamente.", "success")
     return redirect(url_for("noticias.listar_noticias"))

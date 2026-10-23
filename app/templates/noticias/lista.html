@@ -19,7 +19,7 @@
                 {% for noticia in noticias %}
                     <li>
                         <h2><a href="{{ url_for('noticias.ver_noticia', id_noticia=noticia.id) }}">{{ noticia.titulo }}</a></h2>
-                        <p>{{ noticia.fecha_publicacion.strftime("%d/%m/%Y %H:%M") }}</p>
+                        <p>{{ noticia.fecha_publicacion|fecha_es }}</p>
                     </li>
                 {% endfor %}
             </ul>

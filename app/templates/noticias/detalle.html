@@ -8,7 +8,7 @@
     <article>
         <h1>{{ noticia.titulo }}</h1>
         <p>
-            Publicada {{ noticia.fecha_publicacion.strftime("%d/%m/%Y %H:%M") }}
+            Publicada {{ noticia.fecha_publicacion|fecha_es }}
             por {{ noticia.autor.nombre }} {{ noticia.autor.apellidos }}
         </p>
         <div>{{ noticia.contenido | e | replace("\n", "<br>") | safe }}</div>
@@ -19,9 +19,9 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <label>
                     <input type="checkbox" name="confirmar_borrado" value="si" required>
-                    Confirmo que quiero borrar esta noticia.
+                    Confirmo que quiero eliminar esta noticia.
                 </label>
-                <button class="boton-peligro" type="submit">Borrar noticia</button>
+                <button class="boton-peligro" type="submit">Eliminar noticia</button>
             </form>
         {% endif %}
         <p><a class="boton-secundario" href="{{ url_for('noticias.listar_noticias') }}">Volver a noticias</a></p>

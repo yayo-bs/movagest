@@ -24,71 +24,83 @@
         {% endcall %}
         {% if usuarios %}
             <div class="tabla-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Correo electrónico</th>
-                        <th>Rol</th>
-                        <th>Estado</th>
-                        <th>Fecha de alta</th>
-                        <th>Acciones</th>
+            <table class="tabla-tarjetas" role="table">
+                <thead role="rowgroup">
+                    <tr role="row">
+                        <th role="columnheader">Nombre</th>
+                        <th role="columnheader">Correo electrónico</th>
+                        <th role="columnheader">Rol</th>
+                        <th role="columnheader">Estado</th>
+                        <th role="columnheader">Fecha de alta</th>
+                        <th role="columnheader">Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody role="rowgroup">
                     {% for usuario in usuarios %}
-                        <tr>
-                            <td>{{ usuario.nombre }} {{ usuario.apellidos }}</td>
-                            <td>{{ usuario.email }}</td>
-                            <td>{{ usuario.rol }}</td>
-                            <td>{{ etiqueta_estado(usuario.estado) }}</td>
-                            <td>
+                        <tr role="row">
+                            <td role="cell" data-label="Nombre">{{ usuario.nombre }} {{ usuario.apellidos }}</td>
+                            <td role="cell" data-label="Correo electrónico">{{ usuario.email }}</td>
+                            <td role="cell" data-label="Rol">{{ usuario.rol }}</td>
+                            <td role="cell" data-label="Estado">{{ etiqueta_estado(usuario.estado) }}</td>
+                            <td role="cell" data-label="Fecha de alta">
                                 {% if usuario.fecha_alta %}
-                                    {{ usuario.fecha_alta.strftime("%d/%m/%Y %H:%M") }}
+                                    {{ usuario.fecha_alta|fecha_es }}
                                 {% else %}
                                     —
                                 {% endif %}
                             </td>
-                            <td>
-                                {% if usuario.estado == "pendiente" %}
-                                    <form method="post" action="{{ url_for('admin.aprobar_alta', id_usuario=usuario.id) }}">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button class="boton" type="submit">Aprobar</button>
-                                    </form>
-                                    <form method="post" action="{{ url_for('admin.rechazar_alta', id_usuario=usuario.id) }}">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button class="boton-peligro" type="submit">Rechazar</button>
-                                    </form>
-                                {% elif usuario.estado == "activo" %}
-                                    <form method="post" action="{{ url_for('admin.dar_de_baja_usuario', id_usuario=usuario.id) }}">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <label>
-                                            <input type="checkbox" name="confirmar_baja" value="si" required>
-                                            Confirmo la baja
-                                        </label>
-                                        <button class="boton-peligro" type="submit">Dar de baja</button>
-                                    </form>
-                                {% elif usuario.estado == "baja" %}
-                                    <form method="post" action="{{ url_for('admin.reactivar_usuario', id_usuario=usuario.id) }}">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button class="boton-secundario" type="submit">Reactivar</button>
-                                    </form>
-                                {% elif usuario.estado == "rechazado" %}
-                                    <form method="post" action="{{ url_for('admin.reconsiderar_alta', id_usuario=usuario.id) }}">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button class="boton-secundario" type="submit">Reconsiderar</button>
-                                    </form>
-                                    {% if not usuario.es_administrador() %}
-                                        <form method="post" action="{{ url_for('admin.eliminar_usuario_rechazado', id_usuario=usuario.id) }}">
+                            <td role="cell">
+                                <div class="acciones-fila">
+                                    {% if usuario.estado == "pendiente" %}
+                                        <form method="post" action="{{ url_for('admin.aprobar_alta', id_usuario=usuario.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button class="boton boton-compacto" type="submit">Aprobar</button>
+                                        </form>
+                                        <details class="acciones-mas">
+                                            <summary class="boton-secundario boton-compacto">Más</summary>
+                                            <div class="acciones-mas-panel">
+                                                <form method="post" action="{{ url_for('admin.rechazar_alta', id_usuario=usuario.id) }}">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button class="boton-peligro boton-compacto" type="submit">Rechazar</button>
+                                                </form>
+                                            </div>
+                                        </details>
+                                    {% elif usuario.estado == "activo" %}
+                                        <form method="post" action="{{ url_for('admin.dar_de_baja_usuario', id_usuario=usuario.id) }}">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <label>
-                                                <input type="checkbox" name="confirmar_borrado" value="si" required>
-                                                Confirmo la eliminación definitiva
+                                                <input type="checkbox" name="confirmar_baja" value="si" required>
+                                                Confirmo la baja
                                             </label>
-                                            <button class="boton-peligro" type="submit">Eliminar definitivamente</button>
+                                            <button class="boton-peligro boton-compacto" type="submit">Dar de baja</button>
                                         </form>
+                                    {% elif usuario.estado == "baja" %}
+                                        <form method="post" action="{{ url_for('admin.reactivar_usuario', id_usuario=usuario.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button class="boton-secundario boton-compacto" type="submit">Reactivar</button>
+                                        </form>
+                                    {% elif usuario.estado == "rechazado" %}
+                                        <form method="post" action="{{ url_for('admin.reconsiderar_alta', id_usuario=usuario.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button class="boton-secundario boton-compacto" type="submit">Reconsiderar</button>
+                                        </form>
+                                        {% if not usuario.es_administrador() %}
+                                            <details class="acciones-mas">
+                                                <summary class="boton-secundario boton-compacto">Más</summary>
+                                                <div class="acciones-mas-panel">
+                                                    <form method="post" action="{{ url_for('admin.eliminar_usuario_rechazado', id_usuario=usuario.id) }}">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                        <label>
+                                                            <input type="checkbox" name="confirmar_borrado" value="si" required>
+                                                            Confirmo la eliminación definitiva
+                                                        </label>
+                                                        <button class="boton-peligro boton-compacto" type="submit">Eliminar definitivamente</button>
+                                                    </form>
+                                                </div>
+                                            </details>
+                                        {% endif %}
                                     {% endif %}
-                                {% endif %}
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}
@@ -98,7 +110,7 @@
         {% elif hay_filtros %}
             <p>No se encontraron resultados.</p>
         {% else %}
-            <p>No hay usuarios para este filtro.</p>
+            <p>No hay socios para este filtro.</p>
         {% endif %}
         {% include "_paginacion.html" %}
     </section>

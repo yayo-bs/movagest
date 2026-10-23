@@ -63,7 +63,7 @@ def test_socio_activo_ve_el_listado(cliente, crear_usuario):
 
     assert respuesta.status_code == 200
     assert b"Asambleas" in respuesta.data
-    assert b"Nueva convocatoria" not in respuesta.data
+    assert "Crear convocatoria".encode() not in respuesta.data
 
 
 @pytest.mark.parametrize("estado", ["pendiente", "baja"])

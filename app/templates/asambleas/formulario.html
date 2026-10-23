@@ -2,11 +2,11 @@
    Los errores de validación se muestran junto al campo correspondiente. #}
 {% extends "base.html" %}
 
-{% block titulo %}{% if asamblea %}Editar convocatoria{% else %}Nueva convocatoria{% endif %} | Asambleas{% endblock %}
+{% block titulo %}{% if asamblea %}Editar convocatoria{% else %}Crear convocatoria{% endif %} | Asambleas{% endblock %}
 
 {% block contenido %}
     <section class="formulario tarjeta">
-        <h1>{% if asamblea %}Editar convocatoria{% else %}Nueva convocatoria{% endif %}</h1>
+        <h1>{% if asamblea %}Editar convocatoria{% else %}Crear convocatoria{% endif %}</h1>
         <form method="post">
             {{ formulario.hidden_tag() }}
             {% for campo in (formulario.titulo, formulario.tipo, formulario.fecha_hora, formulario.lugar, formulario.orden_del_dia) %}
@@ -19,6 +19,7 @@
                 </div>
             {% endfor %}
             {{ formulario.guardar(class_="boton") }}
+            <a class="boton-secundario" href="{{ url_for('asambleas.listar_asambleas') }}">Cancelar</a>
         </form>
     </section>
 {% endblock %}

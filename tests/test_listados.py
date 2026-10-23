@@ -5,13 +5,15 @@ Verifican el helper común sin depender del contenido de una vista concreta.
 
 import html
 import re
+from datetime import date
+from decimal import Decimal
 from urllib.parse import parse_qs, urlsplit
 
 from sqlalchemy import case
 from werkzeug.datastructures import MultiDict
 
 from app.extensiones import db
-from app.models import Documento, Noticia, Usuario
+from app.models import Documento, Movimiento, Noticia, Usuario
 from app.utilidades.listados import paginar_consulta, preparar_listado
 
 
@@ -239,3 +241,77 @@ def test_enlace_paginacion_conserva_busqueda_orden_y_filtro(
     assert parametros["orden"] == ["titulo"]
     assert parametros["dir"] == ["asc"]
     assert parametros["categoria"] == ["acta"]
+
+
+def test_panel_filtros_cerrado_sin_ordenes_ni_filtros(
+    cliente, crear_usuario
+):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    with cliente.session_transaction() as sesion:
+        sesion["_user_id"] = str(socio.id)
+        sesion["_fresh"] = True
+
+    respuesta = cliente.get("/noticias/?q=busqueda")
+
+    assert respuesta.status_code == 200
+    assert b'<details class="filtros">' in respuesta.data
+    assert b"Filtros y orden (0)" in respuesta.data
+    assert b'name="q" value="busqueda"' in respuesta.data
+    assert b'>Buscar</button>' in respuesta.data
+
+
+def test_panel_filtros_cuenta_orden_direccion_y_filtros_sin_busqueda(
+    cliente, crear_usuario
+):
+    socio = crear_usuario(email="socio@example.com", estado="activo")
+    with cliente.session_transaction() as sesion:
+        sesion["_user_id"] = str(socio.id)
+        sesion["_fresh"] = True
+
+    respuesta_noticias = cliente.get(
+        "/noticias/?q=busqueda&orden=titulo&dir=asc"
+    )
+    assert b'<details class="filtros" open>' in respuesta_noticias.data
+    assert b"Filtros y orden (2)" in respuesta_noticias.data
+
+    respuesta_talleres = cliente.get(
+        "/talleres/?q=busqueda&plazas_libres=si"
+    )
+    assert b'<details class="filtros" open>' in respuesta_talleres.data
+    assert b"Filtros y orden (1)" in respuesta_talleres.data
+    assert b'name="plazas_libres"' in respuesta_talleres.data
+
+
+def test_panel_filtros_no_cuenta_el_anio_actual_predeterminado(
+    cliente, crear_usuario
+):
+    administrador = crear_usuario(
+        email="admin@example.com",
+        rol="administrador",
+        estado="activo",
+    )
+    db.session.add(
+        Movimiento(
+            tipo="ingreso",
+            concepto="Movimiento de otro año",
+            importe=Decimal("1.00"),
+            fecha=date(2025, 1, 1),
+        )
+    )
+    db.session.commit()
+    with cliente.session_transaction() as sesion:
+        sesion["_user_id"] = str(administrador.id)
+        sesion["_fresh"] = True
+
+    respuesta = cliente.get(
+        f"/finanzas/movimientos?anio={date.today().year}"
+    )
+
+    assert respuesta.status_code == 200
+    assert b'<details class="filtros">' in respuesta.data
+    assert b"Filtros y orden (0)" in respuesta.data
+
+    respuesta_otro_anio = cliente.get("/finanzas/movimientos?anio=2025")
+
+    assert b'<details class="filtros" open>' in respuesta_otro_anio.data
+    assert b"Filtros y orden (1)" in respuesta_otro_anio.data

@@ -20,10 +20,12 @@
                     </div>
                 {% endfor %}
                 {{ formulario.guardar(class_="boton") }}
+                <a class="boton-secundario" href="{{ url_for('documentos.listar_documentos') }}">Cancelar</a>
             </form>
         {% else %}
             <p>El archivo supera el tamaño máximo permitido de 10 MB.</p>
             <a class="boton-secundario" href="{{ url_for('documentos.nuevo_documento') }}">Volver al formulario</a>
+            <a class="boton-secundario" href="{{ url_for('documentos.listar_documentos') }}">Cancelar</a>
         {% endif %}
     </section>
 {% endblock %}

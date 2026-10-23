@@ -121,10 +121,10 @@ def test_resumen_suma_ingresos_cuotas_y_gastos_del_anio(
     respuesta = cliente.get("/finanzas/movimientos?anio=2026")
 
     assert respuesta.status_code == 200
-    assert b"100.25" in respuesta.data
-    assert b"40.50" in respuesta.data
-    assert b"30.10" in respuesta.data
-    assert b"110.65" in respuesta.data
+    assert "100,25 €".encode() in respuesta.data
+    assert "40,50 €".encode() in respuesta.data
+    assert "30,10 €".encode() in respuesta.data
+    assert "110,65 €".encode() in respuesta.data
     assert b"Material" not in respuesta.data
 
 

@@ -14,7 +14,7 @@
                 <p><a class="boton" href="{{ url_for('talleres.nuevo_taller') }}">Crear taller</a></p>
             {% endif %}
         </header>
-        {% call filtros_listado(valores, [("fecha", "Fecha"), ("titulo", "Título")]) %}
+        {% call filtros_listado(valores, [("fecha", "Fecha"), ("titulo", "Título")], direccion_por_defecto="asc") %}
             <label>
                 Disponibilidad
                 <select name="plazas_libres">
@@ -28,7 +28,7 @@
                 {% for taller in talleres %}
                     <li>
                         <h2><a href="{{ url_for('talleres.ver_taller', id_taller=taller.id) }}">{{ taller.titulo }}</a></h2>
-                        <p>{{ taller.fecha_hora.strftime("%d/%m/%Y %H:%M") }} · {{ taller.lugar }}</p>
+                        <p>{{ taller.fecha_hora|fecha_es }} · {{ taller.lugar }}</p>
                         <p>{{ taller.plazas_libres }} de {{ taller.plazas }} plazas libres</p>
                         {% if taller.esta_finalizado %}
                             <p>{{ etiqueta_estado("finalizado", "Finalizado") }}</p>

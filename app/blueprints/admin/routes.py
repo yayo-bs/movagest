@@ -126,7 +126,7 @@ def reconsiderar_alta(id_usuario):
     if usuario is None:
         abort(404)
     if usuario.estado != "rechazado":
-        flash("Solo se pueden reconsiderar usuarios rechazados.", "warning")
+        flash("Solo se pueden reconsiderar socios rechazados.", "warning")
         return redirect(url_for("admin.listar_altas"))
 
     usuario.estado = "pendiente"
@@ -146,18 +146,18 @@ def eliminar_usuario_rechazado(id_usuario):
     elif usuario.es_administrador():
         flash("No se pueden eliminar cuentas de administrador.", "warning")
     elif usuario.estado != "rechazado":
-        flash("Solo se pueden eliminar usuarios rechazados.", "warning")
+        flash("Solo se pueden eliminar socios rechazados.", "warning")
     elif _tiene_contenido_asociado(usuario):
         flash(
-            "No se puede eliminar el usuario porque tiene contenido asociado.",
+            "No se puede eliminar al socio porque tiene contenido asociado.",
             "warning",
         )
     elif request.form.get("confirmar_borrado") != "si":
-        flash("Confirma que deseas eliminar definitivamente este usuario.", "warning")
+        flash("Confirma que deseas eliminar definitivamente a este socio.", "warning")
     else:
         db.session.delete(usuario)
         db.session.commit()
-        flash("El usuario rechazado se ha eliminado definitivamente.", "success")
+        flash("El socio rechazado se ha eliminado definitivamente.", "success")
         return redirect(url_for("admin.listar_altas"))
 
     return redirect(url_for("admin.listar_altas"))
@@ -172,13 +172,13 @@ def dar_de_baja_usuario(id_usuario):
     if usuario.id == current_user.id:
         flash("No puedes darte de baja a ti mismo.", "warning")
     elif not usuario.esta_activo():
-        flash("Solo se puede dar de baja a usuarios activos.", "warning")
+        flash("Solo se puede dar de baja a socios activos.", "warning")
     elif usuario.es_administrador() and _administradores_activos() <= 1:
         flash("No se puede dar de baja al último administrador activo.", "warning")
     elif request.form.get("confirmar_baja") != "si":
-        flash("Confirma que deseas dar de baja a este usuario.", "warning")
+        flash("Confirma que deseas dar de baja a este socio.", "warning")
     elif not usuario.dar_de_baja():
-        flash("Solo se puede dar de baja a usuarios activos.", "warning")
+        flash("Solo se puede dar de baja a socios activos.", "warning")
     else:
         _cancelar_inscripciones_futuras(usuario)
         db.session.commit()
@@ -204,7 +204,7 @@ def reactivar_usuario(id_usuario):
     if usuario is None:
         abort(404)
     if not usuario.reactivar():
-        flash("Solo se pueden reactivar usuarios que estén de baja.", "warning")
+        flash("Solo se pueden reactivar socios que estén de baja.", "warning")
         return redirect(url_for("admin.listar_altas"))
 
     db.session.commit()

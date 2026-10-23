@@ -299,12 +299,12 @@ def test_detalle_muestra_inscritos_solo_a_administrador(
 
     iniciar_sesion(cliente, socio)
     respuesta_socio = cliente.get(f"/talleres/{taller.id}")
-    assert b"Personas inscritas" not in respuesta_socio.data
+    assert b"Socios inscritos" not in respuesta_socio.data
 
     cliente_admin = app.test_client()
     iniciar_sesion(cliente_admin, administrador)
     respuesta_admin = cliente_admin.get(f"/talleres/{taller.id}")
-    assert b"Personas inscritas" in respuesta_admin.data
+    assert b"Socios inscritos" in respuesta_admin.data
     assert b"socio@example.com" in respuesta_admin.data
 
 

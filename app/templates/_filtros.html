@@ -1,29 +1,58 @@
 {# Formulario compartido para buscar y ordenar los listados.
    Cada módulo puede añadir sus controles de filtro específicos. #}
-{% macro filtros_listado(valores, ordenaciones) %}
+{% macro filtros_listado(valores, ordenaciones, direccion_por_defecto="desc", filtros_predeterminados=none) %}
+    {% set filtros_predeterminados = filtros_predeterminados or {} %}
+    {% set contador = namespace(activos=0) %}
+    {% if valores.orden %}
+        {% set contador.activos = contador.activos + 1 %}
+        {% if valores.dir != direccion_por_defecto %}
+            {% set contador.activos = contador.activos + 1 %}
+        {% endif %}
+    {% endif %}
+    {% for nombre, valor in valores.items() %}
+        {% if nombre not in ("q", "orden", "dir")
+            and valor
+            and request.args.get(nombre) == valor|string
+            and (
+                nombre not in filtros_predeterminados
+                or valor|string != filtros_predeterminados.get(nombre)|string
+            )
+        %}
+            {% set contador.activos = contador.activos + 1 %}
+        {% endif %}
+    {% endfor %}
     <form method="get" action="{{ request.path }}">
-        <label>
-            Buscar
-            <input type="search" name="q" value="{{ valores.q }}">
-        </label>
-        <label>
-            Ordenar por
-            <select name="orden">
-                <option value="" {% if not valores.orden %}selected{% endif %}>Predeterminado</option>
-                {% for clave, etiqueta in ordenaciones %}
-                    <option value="{{ clave }}" {% if valores.orden == clave %}selected{% endif %}>{{ etiqueta }}</option>
-                {% endfor %}
-            </select>
-        </label>
-        <label>
-            Dirección
-            <select name="dir">
-                <option value="asc" {% if valores.dir == "asc" %}selected{% endif %}>Ascendente</option>
-                <option value="desc" {% if valores.dir == "desc" %}selected{% endif %}>Descendente</option>
-            </select>
-        </label>
-        {{ caller() }}
-        <button class="boton" type="submit">Buscar</button>
-        <a class="boton-secundario" href="{{ request.path }}">Limpiar</a>
+        <div class="filtros-busqueda">
+            <label>
+                Buscar
+                <input type="search" name="q" value="{{ valores.q }}">
+            </label>
+            <button class="boton" type="submit">Buscar</button>
+        </div>
+        <details class="filtros"{% if contador.activos %} open{% endif %}>
+            <summary>Filtros y orden ({{ contador.activos }})</summary>
+            <div class="filtros-campos">
+                <label>
+                    Ordenar por
+                    <select name="orden">
+                        <option value="" {% if not valores.orden %}selected{% endif %}>Predeterminado</option>
+                        {% for clave, etiqueta in ordenaciones %}
+                            <option value="{{ clave }}" {% if valores.orden == clave %}selected{% endif %}>{{ etiqueta }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>
+                    Dirección
+                    <select name="dir">
+                        <option value="asc" {% if valores.dir == "asc" %}selected{% endif %}>Ascendente</option>
+                        <option value="desc" {% if valores.dir == "desc" %}selected{% endif %}>Descendente</option>
+                    </select>
+                </label>
+                {{ caller() }}
+            </div>
+            <div class="filtros-acciones">
+                <a class="boton-secundario" href="{{ request.path }}">Limpiar</a>
+            </div>
+        </details>
     </form>
 {% endmacro %}
