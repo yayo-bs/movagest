@@ -1,15 +1,18 @@
 {# Muestra las convocatorias en el orden de la consulta SQL y permite filtrarlas. #}
 {% extends "base.html" %}
 {% from "_filtros.html" import filtros_listado %}
+{% from "_componentes.html" import etiqueta_estado %}
 
 {% block titulo %}Asambleas | MovaGest{% endblock %}
 
 {% block contenido %}
-    <section>
-        <h1>Asambleas</h1>
-        {% if current_user.es_administrador() %}
-            <p><a href="{{ url_for('asambleas.nueva_asamblea') }}">Nueva convocatoria</a></p>
-        {% endif %}
+    <section class="tarjeta">
+        <header class="cabecera-pagina">
+            <h1>Asambleas</h1>
+            {% if current_user.es_administrador() %}
+                <p><a class="boton" href="{{ url_for('asambleas.nueva_asamblea') }}">Nueva convocatoria</a></p>
+            {% endif %}
+        </header>
 
         {% call filtros_listado(valores, [("fecha", "Fecha"), ("titulo", "Título")]) %}
             <label>
@@ -35,9 +38,9 @@
                     <li>
                         <h3><a href="{{ url_for('asambleas.ver_asamblea', id_asamblea=asamblea.id) }}">{{ asamblea.titulo }}</a></h3>
                         <p>{{ asamblea.fecha_hora.strftime("%d/%m/%Y %H:%M") }} · {{ asamblea.lugar }}</p>
-                        <p>{% if asamblea.es_futura %}Próxima{% else %}Pasada{% endif %}</p>
+                        <p>{{ etiqueta_estado("próxima" if asamblea.es_futura else "pasada", "Próxima" if asamblea.es_futura else "Pasada") }}</p>
                         {% if current_user.es_administrador() %}
-                            <a href="{{ url_for('asambleas.editar_asamblea', id_asamblea=asamblea.id) }}">Editar</a>
+                            <a class="boton-secundario" href="{{ url_for('asambleas.editar_asamblea', id_asamblea=asamblea.id) }}">Editar</a>
                         {% endif %}
                     </li>
                 {% endfor %}

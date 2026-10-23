@@ -5,11 +5,13 @@
 {% block titulo %}Noticias | MovaGest{% endblock %}
 
 {% block contenido %}
-    <section>
-        <h1>Noticias</h1>
-        {% if current_user.es_administrador() %}
-            <p><a href="{{ url_for('noticias.nueva_noticia') }}">Crear noticia</a></p>
-        {% endif %}
+    <section class="tarjeta">
+        <header class="cabecera-pagina">
+            <h1>Noticias</h1>
+            {% if current_user.es_administrador() %}
+                <p><a class="boton" href="{{ url_for('noticias.nueva_noticia') }}">Crear noticia</a></p>
+            {% endif %}
+        </header>
         {% call filtros_listado(valores, [("fecha", "Fecha"), ("titulo", "Título")]) %}
         {% endcall %}
         {% if noticias %}

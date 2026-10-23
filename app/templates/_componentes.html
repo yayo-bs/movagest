@@ -1,0 +1,18 @@
+{# Componentes visuales reutilizables para mantener el mismo aspecto entre módulos.
+   La etiqueta conserva el texto original y elige un color según su estado. #}
+{% macro etiqueta_estado(estado, texto=none) %}
+    {% set modificadores = {
+        "pendiente": "aviso",
+        "activo": "exito",
+        "rechazado": "peligro",
+        "baja": "neutro",
+        "pagada": "exito",
+        "anulada": "neutro",
+        "finalizado": "neutro",
+        "próxima": "info",
+        "pasada": "neutro",
+        "inscrito": "exito",
+        "completo": "aviso"
+    } %}
+    <span class="etiqueta etiqueta-{{ modificadores.get(estado, 'neutro') }}">{{ texto if texto is not none else estado }}</span>
+{% endmacro %}

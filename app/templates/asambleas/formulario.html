@@ -5,7 +5,7 @@
 {% block titulo %}{% if asamblea %}Editar convocatoria{% else %}Nueva convocatoria{% endif %} | Asambleas{% endblock %}
 
 {% block contenido %}
-    <section class="formulario">
+    <section class="formulario tarjeta">
         <h1>{% if asamblea %}Editar convocatoria{% else %}Nueva convocatoria{% endif %}</h1>
         <form method="post">
             {{ formulario.hidden_tag() }}
@@ -18,7 +18,7 @@
                     {% endfor %}
                 </div>
             {% endfor %}
-            {{ formulario.guardar() }}
+            {{ formulario.guardar(class_="boton") }}
         </form>
     </section>
 {% endblock %}

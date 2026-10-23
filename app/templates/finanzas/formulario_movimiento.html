@@ -4,7 +4,7 @@
 {% block titulo %}{% if movimiento %}Editar movimiento{% else %}Nuevo movimiento{% endif %} | MovaGest{% endblock %}
 
 {% block contenido %}
-    <section class="formulario">
+    <section class="formulario tarjeta">
         <h1>{% if movimiento %}Editar movimiento{% else %}Nuevo movimiento{% endif %}</h1>
         <form method="post">
             {{ formulario.hidden_tag() }}
@@ -17,7 +17,7 @@
                     {% endfor %}
                 </div>
             {% endfor %}
-            {{ formulario.guardar() }}
+            {{ formulario.guardar(class_="boton") }}
         </form>
     </section>
 {% endblock %}

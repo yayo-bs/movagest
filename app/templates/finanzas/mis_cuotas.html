@@ -1,12 +1,14 @@
 {# Muestra las cuotas de la persona autenticada y sus recibos disponibles. #}
 {% extends "base.html" %}
+{% from "_componentes.html" import etiqueta_estado %}
 
 {% block titulo %}Mis cuotas | MovaGest{% endblock %}
 
 {% block contenido %}
-    <section>
+    <section class="tarjeta">
         <h1>Mis cuotas</h1>
         {% if cuotas %}
+            <div class="tabla-responsive">
             <table>
                 <thead>
                     <tr>
@@ -22,7 +24,7 @@
                         <tr>
                             <td>{{ cuota.periodo }}</td>
                             <td>{{ cuota.importe }}</td>
-                            <td>{{ cuota.estado|capitalize }}</td>
+                            <td>{{ etiqueta_estado(cuota.estado, cuota.estado|capitalize) }}</td>
                             <td>
                                 {% if cuota.fecha_pago %}
                                     {{ cuota.fecha_pago.strftime("%d/%m/%Y") }}
@@ -32,7 +34,7 @@
                             </td>
                             <td>
                                 {% if cuota.estado == "pagada" and cuota.numero_recibo %}
-                                    <a href="{{ url_for('finanzas.descargar_recibo', id_cuota=cuota.id) }}">Descargar {{ cuota.numero_recibo }}</a>
+                                    <a class="boton" href="{{ url_for('finanzas.descargar_recibo', id_cuota=cuota.id) }}">Descargar {{ cuota.numero_recibo }}</a>
                                 {% else %}
                                     —
                                 {% endif %}
@@ -41,6 +43,7 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         {% else %}
             <p>Aún no tienes cuotas registradas.</p>
         {% endif %}

@@ -2,11 +2,12 @@
    Los cambios de estado se envían mediante formularios POST con CSRF. #}
 {% extends "base.html" %}
 {% from "_filtros.html" import filtros_listado %}
+{% from "_componentes.html" import etiqueta_estado %}
 
 {% block titulo %}Gestión de socios | MovaGest{% endblock %}
 
 {% block contenido %}
-    <section>
+    <section class="tarjeta">
         <h1>Gestión de socios</h1>
         {% call filtros_listado(valores, [("nombre", "Nombre"), ("fecha", "Fecha de alta")]) %}
             <label>
@@ -22,6 +23,7 @@
             </label>
         {% endcall %}
         {% if usuarios %}
+            <div class="tabla-responsive">
             <table>
                 <thead>
                     <tr>
@@ -39,7 +41,7 @@
                             <td>{{ usuario.nombre }} {{ usuario.apellidos }}</td>
                             <td>{{ usuario.email }}</td>
                             <td>{{ usuario.rol }}</td>
-                            <td>{{ usuario.estado }}</td>
+                            <td>{{ etiqueta_estado(usuario.estado) }}</td>
                             <td>
                                 {% if usuario.fecha_alta %}
                                     {{ usuario.fecha_alta.strftime("%d/%m/%Y %H:%M") }}
@@ -51,11 +53,11 @@
                                 {% if usuario.estado == "pendiente" %}
                                     <form method="post" action="{{ url_for('admin.aprobar_alta', id_usuario=usuario.id) }}">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit">Aprobar</button>
+                                        <button class="boton" type="submit">Aprobar</button>
                                     </form>
                                     <form method="post" action="{{ url_for('admin.rechazar_alta', id_usuario=usuario.id) }}">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit">Rechazar</button>
+                                        <button class="boton-peligro" type="submit">Rechazar</button>
                                     </form>
                                 {% elif usuario.estado == "activo" %}
                                     <form method="post" action="{{ url_for('admin.dar_de_baja_usuario', id_usuario=usuario.id) }}">
@@ -64,17 +66,17 @@
                                             <input type="checkbox" name="confirmar_baja" value="si" required>
                                             Confirmo la baja
                                         </label>
-                                        <button type="submit">Dar de baja</button>
+                                        <button class="boton-peligro" type="submit">Dar de baja</button>
                                     </form>
                                 {% elif usuario.estado == "baja" %}
                                     <form method="post" action="{{ url_for('admin.reactivar_usuario', id_usuario=usuario.id) }}">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit">Reactivar</button>
+                                        <button class="boton-secundario" type="submit">Reactivar</button>
                                     </form>
                                 {% elif usuario.estado == "rechazado" %}
                                     <form method="post" action="{{ url_for('admin.reconsiderar_alta', id_usuario=usuario.id) }}">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit">Reconsiderar</button>
+                                        <button class="boton-secundario" type="submit">Reconsiderar</button>
                                     </form>
                                     {% if not usuario.es_administrador() %}
                                         <form method="post" action="{{ url_for('admin.eliminar_usuario_rechazado', id_usuario=usuario.id) }}">
@@ -83,7 +85,7 @@
                                                 <input type="checkbox" name="confirmar_borrado" value="si" required>
                                                 Confirmo la eliminación definitiva
                                             </label>
-                                            <button type="submit">Eliminar definitivamente</button>
+                                            <button class="boton-peligro" type="submit">Eliminar definitivamente</button>
                                         </form>
                                     {% endif %}
                                 {% endif %}
@@ -92,6 +94,7 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         {% elif hay_filtros %}
             <p>No se encontraron resultados.</p>
         {% else %}

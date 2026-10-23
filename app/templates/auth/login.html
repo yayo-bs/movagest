@@ -5,7 +5,7 @@
 {% block titulo %}Entrar | MovaGest{% endblock %}
 
 {% block contenido %}
-    <section class="formulario">
+    <section class="formulario tarjeta">
         <h1>Entrar</h1>
         <form method="post">
             {{ formulario.hidden_tag() }}
@@ -18,7 +18,7 @@
                     {% endfor %}
                 </div>
             {% endfor %}
-            {{ formulario.enviar() }}
+            {{ formulario.enviar(class_="boton") }}
         </form>
     </section>
 {% endblock %}

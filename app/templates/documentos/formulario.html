@@ -5,7 +5,7 @@
 {% block titulo %}Subir documento | MovaGest{% endblock %}
 
 {% block contenido %}
-    <section class="formulario">
+    <section class="formulario tarjeta">
         <h1>Subir documento o acta</h1>
         {% if formulario %}
             <form method="post" enctype="multipart/form-data">
@@ -19,11 +19,11 @@
                         {% endfor %}
                     </div>
                 {% endfor %}
-                {{ formulario.guardar() }}
+                {{ formulario.guardar(class_="boton") }}
             </form>
         {% else %}
             <p>El archivo supera el tamaño máximo permitido de 10 MB.</p>
-            <a href="{{ url_for('documentos.nuevo_documento') }}">Volver al formulario</a>
+            <a class="boton-secundario" href="{{ url_for('documentos.nuevo_documento') }}">Volver al formulario</a>
         {% endif %}
     </section>
 {% endblock %}

@@ -4,7 +4,7 @@
 {% block titulo %}Registrar pago | MovaGest{% endblock %}
 
 {% block contenido %}
-    <section class="formulario">
+    <section class="formulario tarjeta">
         <h1>Registrar pago de cuota</h1>
         <p>{{ cuota.usuario.nombre }} {{ cuota.usuario.apellidos }} · {{ cuota.periodo }} · {{ cuota.importe }}</p>
         <form method="post">
@@ -16,7 +16,7 @@
                     <p class="error">{{ error }}</p>
                 {% endfor %}
             </div>
-            {{ formulario.guardar() }}
+            {{ formulario.guardar(class_="boton") }}
         </form>
     </section>
 {% endblock %}
