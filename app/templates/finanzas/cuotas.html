@@ -3,15 +3,15 @@
 {% from "_filtros.html" import filtros_listado %}
 {% from "_componentes.html" import etiqueta_estado %}
 
-{% block titulo %}Cuotas | MovaGest{% endblock %}
+{% block titulo %}Cuotas · MovaGest{% endblock %}
 
 {% block contenido %}
     <section class="tarjeta">
         <header class="cabecera-pagina">
             <h1>Cuotas de socios</h1>
-            <div>
-                <p><a href="{{ url_for('finanzas.listar_movimientos') }}">Ver ingresos y gastos</a></p>
-                <p><a class="boton" href="{{ url_for('finanzas.generar_cuotas') }}">Generar cuotas del periodo</a></p>
+            <div class="acciones-fila">
+                <a href="{{ url_for('finanzas.listar_movimientos') }}">Ver ingresos y gastos</a>
+                <a class="boton" href="{{ url_for('finanzas.generar_cuotas') }}">Generar cuotas del periodo</a>
             </div>
         </header>
 
@@ -47,7 +47,7 @@
                         <th role="columnheader">Estado</th>
                         <th role="columnheader">Fecha de pago</th>
                         <th role="columnheader">Recibo</th>
-                        <th role="columnheader">Acciones</th>
+                        <th class="columna-acciones" role="columnheader">Acciones</th>
                     </tr>
                 </thead>
                 <tbody role="rowgroup">
@@ -65,22 +65,24 @@
                                     {{ cuota.numero_recibo or "—" }}
                                 {% endif %}
                             </td>
-                            <td role="cell">
+                            <td class="columna-acciones" role="cell">
                                 <div class="acciones-fila">
                                     {% if cuota.estado == "pendiente" %}
                                         <a class="boton boton-compacto" href="{{ url_for('finanzas.pagar_cuota', id_cuota=cuota.id) }}">Marcar pagada</a>
-                                        <details class="acciones-mas">
-                                            <summary class="boton-secundario boton-compacto">Más</summary>
-                                            <div class="acciones-mas-panel">
-                                                <a class="boton-secundario boton-compacto" href="{{ url_for('finanzas.editar_cuota', id_cuota=cuota.id) }}">Editar importe</a>
-                                                {% if cuota.numero_recibo is none %}
+                                        {% if cuota.numero_recibo is none %}
+                                            <details class="acciones-mas">
+                                                <summary class="boton-secundario boton-compacto">Más</summary>
+                                                <div class="acciones-mas-panel">
+                                                    <a class="boton boton-compacto" href="{{ url_for('finanzas.editar_cuota', id_cuota=cuota.id) }}">Editar importe</a>
                                                     <form method="post" action="{{ url_for('finanzas.eliminar_cuota', id_cuota=cuota.id) }}">
                                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                         <button class="boton-peligro boton-compacto" type="submit">Eliminar</button>
                                                     </form>
-                                                {% endif %}
-                                            </div>
-                                        </details>
+                                                </div>
+                                            </details>
+                                        {% else %}
+                                            <a class="boton boton-compacto" href="{{ url_for('finanzas.editar_cuota', id_cuota=cuota.id) }}">Editar importe</a>
+                                        {% endif %}
                                     {% elif cuota.estado == "pagada" %}
                                         <form method="post" action="{{ url_for('finanzas.anular_cuota', id_cuota=cuota.id) }}">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -106,9 +108,9 @@
             </table>
             </div>
         {% elif hay_filtros %}
-            <p>No se encontraron cuotas.</p>
+            <p class="estado-vacio">No se encontraron cuotas.</p>
         {% else %}
-            <p>No hay cuotas registradas.</p>
+            <p class="estado-vacio">No hay cuotas registradas.</p>
         {% endif %}
         {% include "_paginacion.html" %}
     </section>

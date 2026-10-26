@@ -2,7 +2,7 @@
    Los errores de validación se muestran junto al campo correspondiente. #}
 {% extends "base.html" %}
 
-{% block titulo %}{% if taller %}Editar taller{% else %}Crear taller{% endif %} | MovaGest{% endblock %}
+{% block titulo %}{% if taller %}Editar taller{% else %}Crear taller{% endif %} · MovaGest{% endblock %}
 
 {% block contenido %}
     <section class="formulario tarjeta">
@@ -12,14 +12,22 @@
             {% for campo in (formulario.titulo, formulario.descripcion, formulario.fecha_hora, formulario.lugar, formulario.plazas) %}
                 <div class="campo">
                     {{ campo.label }}
-                    {{ campo() }}
-                    {% for error in campo.errors %}
-                        <p class="error">{{ error }}</p>
-                    {% endfor %}
+                    {% if campo.errors %}
+                        {{ campo(**{"aria-invalid": "true", "aria-describedby": "errores-" ~ campo.id}) }}
+                        <div id="errores-{{ campo.id }}">
+                            {% for error in campo.errors %}
+                                <p class="error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ campo() }}
+                    {% endif %}
                 </div>
             {% endfor %}
-            {{ formulario.guardar(class_="boton") }}
-            <a class="boton-secundario" href="{{ url_for('talleres.listar_talleres') }}">Cancelar</a>
+            <div class="acciones-fila">
+                {{ formulario.guardar(class_="boton") }}
+                <a class="boton-secundario" href="{{ url_for('talleres.listar_talleres') }}">Cancelar</a>
+            </div>
         </form>
     </section>
 {% endblock %}

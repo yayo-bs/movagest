@@ -3,7 +3,7 @@
 {% from "_filtros.html" import filtros_listado %}
 {% from "_componentes.html" import etiqueta_estado %}
 
-{% block titulo %}Asambleas | MovaGest{% endblock %}
+{% block titulo %}Asambleas · MovaGest{% endblock %}
 
 {% block contenido %}
     <section class="tarjeta">
@@ -46,9 +46,9 @@
                 {% endfor %}
             </ul>
         {% elif hay_filtros %}
-            <p>No se encontraron resultados.</p>
+            <p class="estado-vacio">No se encontraron resultados.</p>
         {% else %}
-            <p>No hay convocatorias publicadas.</p>
+            <p class="estado-vacio">No hay convocatorias publicadas.</p>
         {% endif %}
         {% include "_paginacion.html" %}
     </section>

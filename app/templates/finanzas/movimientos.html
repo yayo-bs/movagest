@@ -2,13 +2,13 @@
 {% extends "base.html" %}
 {% from "_filtros.html" import filtros_listado %}
 
-{% block titulo %}Finanzas | MovaGest{% endblock %}
+{% block titulo %}Finanzas · MovaGest{% endblock %}
 
 {% block contenido %}
     <section class="tarjeta">
         <header class="cabecera-pagina">
             <h1>Finanzas</h1>
-            <div class="acciones-cabecera">
+            <div class="acciones-fila">
                 <a class="boton" href="{{ url_for('finanzas.nuevo_movimiento') }}">Añadir movimiento</a>
                 <a class="boton-secundario" href="{{ url_for('finanzas.listar_cuotas') }}">Gestionar cuotas</a>
             </div>
@@ -55,37 +55,32 @@
 
         {% if movimientos %}
             <div class="tabla-responsive">
-            <table class="tabla-movimientos">
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Tipo</th>
-                        <th>Concepto</th>
-                        <th>Categoría</th>
-                        <th>Importe</th>
-                        <th>Acciones</th>
+            <table class="tabla-tarjetas" role="table">
+                <thead role="rowgroup">
+                    <tr role="row">
+                        <th role="columnheader">Fecha</th>
+                        <th role="columnheader">Tipo</th>
+                        <th role="columnheader">Concepto</th>
+                        <th role="columnheader">Categoría</th>
+                        <th role="columnheader">Importe</th>
+                        <th class="columna-acciones" role="columnheader">Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody role="rowgroup">
                     {% for movimiento in movimientos %}
-                        <tr>
-                            <td>{{ movimiento.fecha|fecha_es }}</td>
-                            <td>{{ movimiento.tipo|capitalize }}</td>
-                            <td>{{ movimiento.concepto }}</td>
-                            <td>{{ movimiento.categoria or "—" }}</td>
-                            <td>{{ movimiento.importe|euros }}</td>
-                            <td>
+                        <tr role="row">
+                            <td role="cell" data-label="Fecha">{{ movimiento.fecha|fecha_es }}</td>
+                            <td role="cell" data-label="Tipo">{{ movimiento.tipo|capitalize }}</td>
+                            <td role="cell" data-label="Concepto">{{ movimiento.concepto }}</td>
+                            <td role="cell" data-label="Categoría">{{ movimiento.categoria or "—" }}</td>
+                            <td role="cell" data-label="Importe">{{ movimiento.importe|euros }}</td>
+                            <td class="columna-acciones" role="cell">
                                 <div class="acciones-fila">
-                                    <a class="boton-secundario boton-compacto" href="{{ url_for('finanzas.editar_movimiento', id_movimiento=movimiento.id) }}">Editar</a>
-                                    <details class="acciones-mas">
-                                        <summary class="boton-secundario boton-compacto">Más</summary>
-                                        <div class="acciones-mas-panel">
-                                            <form method="post" action="{{ url_for('finanzas.eliminar_movimiento', id_movimiento=movimiento.id) }}">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button class="boton-peligro boton-compacto" type="submit">Eliminar</button>
-                                            </form>
-                                        </div>
-                                    </details>
+                                    <a class="boton boton-compacto" href="{{ url_for('finanzas.editar_movimiento', id_movimiento=movimiento.id) }}">Editar</a>
+                                    <form method="post" action="{{ url_for('finanzas.eliminar_movimiento', id_movimiento=movimiento.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button class="boton-peligro boton-compacto" type="submit">Eliminar</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -94,9 +89,9 @@
             </table>
             </div>
         {% elif hay_filtros %}
-            <p>No se encontraron movimientos para este periodo.</p>
+            <p class="estado-vacio">No se encontraron movimientos para este periodo.</p>
         {% else %}
-            <p>No hay movimientos registrados.</p>
+            <p class="estado-vacio">No hay movimientos registrados.</p>
         {% endif %}
         {% include "_paginacion.html" %}
     </section>

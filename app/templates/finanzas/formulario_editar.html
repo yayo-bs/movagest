@@ -1,7 +1,7 @@
 {# Formulario para actualizar el importe de una cuota pendiente. #}
 {% extends "base.html" %}
 
-{% block titulo %}Editar cuota | MovaGest{% endblock %}
+{% block titulo %}Editar cuota · MovaGest{% endblock %}
 
 {% block contenido %}
     <section class="formulario tarjeta">
@@ -11,13 +11,21 @@
             {{ formulario.hidden_tag() }}
             <div class="campo">
                 {{ formulario.importe.label }}
-                {{ formulario.importe() }}
-                {% for error in formulario.importe.errors %}
-                    <p class="error">{{ error }}</p>
-                {% endfor %}
+                {% if formulario.importe.errors %}
+                    {{ formulario.importe(**{"aria-invalid": "true", "aria-describedby": "errores-" ~ formulario.importe.id}) }}
+                    <div id="errores-{{ formulario.importe.id }}">
+                        {% for error in formulario.importe.errors %}
+                            <p class="error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ formulario.importe() }}
+                {% endif %}
             </div>
-            {{ formulario.guardar(class_="boton") }}
-            <a class="boton-secundario" href="{{ url_for('finanzas.listar_cuotas') }}">Cancelar</a>
+            <div class="acciones-fila">
+                {{ formulario.guardar(class_="boton") }}
+                <a class="boton-secundario" href="{{ url_for('finanzas.listar_cuotas') }}">Cancelar</a>
+            </div>
         </form>
     </section>
 {% endblock %}

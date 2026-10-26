@@ -2,7 +2,7 @@
    La carga multipart permite validar y guardar el archivo seleccionado. #}
 {% extends "base.html" %}
 
-{% block titulo %}Subir documento | MovaGest{% endblock %}
+{% block titulo %}Subir documento · MovaGest{% endblock %}
 
 {% block contenido %}
     <section class="formulario tarjeta">
@@ -13,19 +13,29 @@
                 {% for campo in (formulario.titulo, formulario.descripcion, formulario.categoria, formulario.archivo) %}
                     <div class="campo">
                         {{ campo.label }}
-                        {{ campo() }}
-                        {% for error in campo.errors %}
-                            <p class="error">{{ error }}</p>
-                        {% endfor %}
+                        {% if campo.errors %}
+                            {{ campo(**{"aria-invalid": "true", "aria-describedby": "errores-" ~ campo.id}) }}
+                            <div id="errores-{{ campo.id }}">
+                                {% for error in campo.errors %}
+                                    <p class="error">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ campo() }}
+                        {% endif %}
                     </div>
                 {% endfor %}
-                {{ formulario.guardar(class_="boton") }}
-                <a class="boton-secundario" href="{{ url_for('documentos.listar_documentos') }}">Cancelar</a>
+                <div class="acciones-fila">
+                    {{ formulario.guardar(class_="boton") }}
+                    <a class="boton-secundario" href="{{ url_for('documentos.listar_documentos') }}">Cancelar</a>
+                </div>
             </form>
         {% else %}
             <p>El archivo supera el tamaño máximo permitido de 10 MB.</p>
-            <a class="boton-secundario" href="{{ url_for('documentos.nuevo_documento') }}">Volver al formulario</a>
-            <a class="boton-secundario" href="{{ url_for('documentos.listar_documentos') }}">Cancelar</a>
+            <div class="acciones-fila">
+                <a class="boton-secundario" href="{{ url_for('documentos.nuevo_documento') }}">Volver al formulario</a>
+                <a class="boton-secundario" href="{{ url_for('documentos.listar_documentos') }}">Cancelar</a>
+            </div>
         {% endif %}
     </section>
 {% endblock %}

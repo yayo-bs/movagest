@@ -1,7 +1,7 @@
 {# Formulario para registrar el pago de una cuota con fecha editable. #}
 {% extends "base.html" %}
 
-{% block titulo %}Registrar pago | MovaGest{% endblock %}
+{% block titulo %}Registrar pago · MovaGest{% endblock %}
 
 {% block contenido %}
     <section class="formulario tarjeta">
@@ -11,13 +11,21 @@
             {{ formulario.hidden_tag() }}
             <div class="campo">
                 {{ formulario.fecha_pago.label }}
-                {{ formulario.fecha_pago() }}
-                {% for error in formulario.fecha_pago.errors %}
-                    <p class="error">{{ error }}</p>
-                {% endfor %}
+                {% if formulario.fecha_pago.errors %}
+                    {{ formulario.fecha_pago(**{"aria-invalid": "true", "aria-describedby": "errores-" ~ formulario.fecha_pago.id}) }}
+                    <div id="errores-{{ formulario.fecha_pago.id }}">
+                        {% for error in formulario.fecha_pago.errors %}
+                            <p class="error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ formulario.fecha_pago() }}
+                {% endif %}
             </div>
-            {{ formulario.guardar(class_="boton") }}
-            <a class="boton-secundario" href="{{ url_for('finanzas.listar_cuotas') }}">Cancelar</a>
+            <div class="acciones-fila">
+                {{ formulario.guardar(class_="boton") }}
+                <a class="boton-secundario" href="{{ url_for('finanzas.listar_cuotas') }}">Cancelar</a>
+            </div>
         </form>
     </section>
 {% endblock %}

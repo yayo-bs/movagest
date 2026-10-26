@@ -10,6 +10,7 @@
     --color-fondo: #FAF8F5;
     --color-superficie: #FFFFFF;
     --color-borde: #E4DED5;
+    --color-borde-control: #858585;
     --color-texto: #24313D;
     --color-texto-suave: #5B6670;
     --color-exito: #2E7D4F;
@@ -21,6 +22,7 @@
     --color-peligro-fondo: #FDECEA;
     --color-info: #1F5A8A;
     --color-info-fondo: #E7F0F8;
+    --color-overlay-menu: color-mix(in srgb, var(--color-primario-oscuro), transparent 35%);
     --espacio-1: 0.25rem;
     --espacio-2: 0.5rem;
     --espacio-3: 1rem;
@@ -31,11 +33,16 @@
     --sombra-tarjeta: 0 2px 10px rgba(23, 50, 77, 0.08);
     --ancho-contenido: 60rem;
     --ancho-formulario: 32rem;
+    /* El @media repite este valor porque CSS no admite var() en consultas. */
+    --punto-corte-tablas: 64rem;
     --fuente-base: "Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
     --texto-base: 1rem;
     --texto-h1: 1.75rem;
     --texto-h2: 1.35rem;
     --texto-h3: 1.15rem;
+    --texto-boton: 0.9375rem;
+    --texto-boton-compacto: 0.875rem;
+    --alto-boton-compacto: 2rem;
     --interlineado: 1.6;
     --interlineado-titulos: 1.25;
     --interlineado-boton: 1.2;
@@ -49,6 +56,9 @@
 }
 
 body {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
     margin: 0;
     background: var(--color-fondo);
     color: var(--color-texto);
@@ -65,9 +75,37 @@ a:hover {
     color: var(--color-primario-oscuro);
 }
 
+.enlace-salto {
+    position: absolute;
+    z-index: 200;
+    top: var(--espacio-2);
+    left: var(--espacio-2);
+    padding: var(--espacio-2) var(--espacio-3);
+    transform: translateY(-200%);
+    border-radius: var(--radio-campo);
+    background: var(--color-superficie);
+    color: var(--color-primario);
+}
+
+.enlace-salto:focus {
+    transform: translateY(0);
+}
+
+.enlace-salto:focus-visible {
+    outline-color: var(--color-primario);
+}
+
 :focus-visible {
     outline: var(--ancho-anillo-foco) solid var(--color-acento);
     outline-offset: var(--espacio-1);
+}
+
+.contenido :focus-visible {
+    outline-color: var(--color-primario);
+}
+
+.cabecera :focus-visible {
+    outline-color: var(--color-acento);
 }
 
 .cabecera {
@@ -232,9 +270,21 @@ a:hover {
 }
 
 .contenido {
+    width: 100%;
+    flex: 1;
     max-width: var(--ancho-contenido);
     margin: var(--espacio-4) auto;
     padding: 0 var(--espacio-3);
+}
+
+.pie-pagina {
+    width: 100%;
+    max-width: var(--ancho-contenido);
+    margin: 0 auto;
+    padding: var(--espacio-3) var(--espacio-3) var(--espacio-4);
+    border-top: var(--borde-fino) solid var(--color-borde);
+    color: var(--color-texto-suave);
+    text-align: center;
 }
 
 h1,
@@ -280,6 +330,15 @@ small {
 .mensaje {
     margin: 0 0 var(--espacio-3);
     border-left-width: var(--espacio-1);
+}
+
+.estado-vacio {
+    margin: var(--espacio-3) 0;
+    padding: var(--espacio-3);
+    border: var(--borde-fino) dashed var(--color-borde);
+    border-radius: var(--radio-tarjeta);
+    background: var(--color-fondo);
+    color: var(--color-texto-suave);
 }
 
 .mensaje.success {
@@ -332,7 +391,7 @@ textarea {
     width: 100%;
     min-height: var(--alto-tactil);
     padding: var(--espacio-2) var(--espacio-3);
-    border: var(--borde-fino) solid var(--color-borde);
+    border: var(--borde-fino) solid var(--color-borde-control);
     border-radius: var(--radio-campo);
     background: var(--color-superficie);
     color: var(--color-texto);
@@ -360,14 +419,14 @@ textarea {
 .boton-secundario,
 .boton-peligro {
     display: inline-flex;
-    min-height: calc(var(--alto-tactil) - var(--espacio-1));
+    min-height: var(--alto-tactil);
     align-items: center;
     justify-content: center;
     padding: var(--espacio-2) var(--espacio-3);
     border: var(--borde-fino) solid transparent;
     border-radius: var(--radio-campo);
     font: inherit;
-    font-size: 0.9375rem;
+    font-size: var(--texto-boton);
     font-weight: 700;
     line-height: var(--interlineado-boton);
     text-align: center;
@@ -376,9 +435,9 @@ textarea {
 }
 
 .boton-compacto {
-    min-height: 2rem;
+    min-height: var(--alto-boton-compacto);
     padding: var(--espacio-1) calc(var(--espacio-2) + var(--espacio-1));
-    font-size: 0.875rem;
+    font-size: var(--texto-boton-compacto);
 }
 
 .acciones-fila {
@@ -398,8 +457,10 @@ textarea {
 
 .acciones-fila form > label {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--espacio-1);
+    font-size: smaller;
 }
 
 .acciones-mas {
@@ -407,6 +468,9 @@ textarea {
 }
 
 .acciones-mas > summary {
+    min-height: var(--alto-tactil);
+    display: inline-flex;
+    align-items: center;
     cursor: pointer;
     list-style: none;
 }
@@ -468,17 +532,33 @@ table {
     background: var(--color-superficie);
 }
 
-.tabla-movimientos th:first-child,
-.tabla-movimientos td:first-child {
-    position: sticky;
-    left: 0;
-    z-index: 1;
-    background: var(--color-superficie);
-    box-shadow: 0.25rem 0 0.5rem -0.25rem var(--color-borde);
+.tabla-tarjetas {
+    table-layout: fixed;
 }
 
-.tabla-movimientos th:first-child {
-    z-index: 2;
+.tabla-tarjetas th,
+.tabla-tarjetas td {
+    overflow-wrap: anywhere;
+}
+
+.tabla-tarjetas .columna-acciones {
+    width: 15%;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.tabla-tarjetas .columna-acciones .acciones-fila {
+    justify-content: flex-start;
+}
+
+.tabla-tarjetas .columna-acciones .boton,
+.tabla-tarjetas .columna-acciones .boton-secundario,
+.tabla-tarjetas .columna-acciones .boton-peligro {
+    min-width: 7rem;
+}
+
+.tabla-tarjetas td[data-label="Importe"] {
+    text-align: right;
 }
 
 th,
@@ -548,17 +628,15 @@ tbody tr:hover {
     margin: 0;
 }
 
-.acciones-cabecera {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--espacio-2);
-}
-
 .inicio-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--espacio-3);
+}
+
+.inicio-contenido {
+    display: grid;
+    gap: var(--espacio-4);
 }
 
 .inicio-grid > .tarjeta {
@@ -679,7 +757,7 @@ tbody tr:hover {
     }
 }
 
-@media (max-width: 47.999rem) {
+@media (max-width: 64rem) {
     .tabla-tarjetas {
         display: block;
         background: transparent;
@@ -727,6 +805,14 @@ tbody tr:hover {
         display: block;
     }
 
+    .tabla-tarjetas .columna-acciones {
+        width: auto;
+    }
+
+    .tabla-tarjetas td[data-label="Importe"] {
+        text-align: left;
+    }
+
     .tabla-tarjetas .boton,
     .tabla-tarjetas .boton-secundario,
     .tabla-tarjetas .boton-peligro {
@@ -752,6 +838,10 @@ tbody tr:hover {
 
     .cabecera nav#navegacion-principal {
         flex: 1 0 100%;
+    }
+
+    .boton-compacto {
+        min-height: var(--alto-tactil);
     }
 
     .menu-grupo > summary {
@@ -866,7 +956,7 @@ tbody tr:hover {
         width: 100%;
         height: 100%;
         border: 0;
-        background: color-mix(in srgb, var(--color-primario-oscuro), transparent 35%);
+        background: var(--color-overlay-menu);
         opacity: 0;
         transition: opacity 200ms ease, visibility 200ms ease;
         visibility: hidden;

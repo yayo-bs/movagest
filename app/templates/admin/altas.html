@@ -4,7 +4,7 @@
 {% from "_filtros.html" import filtros_listado %}
 {% from "_componentes.html" import etiqueta_estado %}
 
-{% block titulo %}Gestión de socios | MovaGest{% endblock %}
+{% block titulo %}Gestión de socios · MovaGest{% endblock %}
 
 {% block contenido %}
     <section class="tarjeta">
@@ -32,7 +32,7 @@
                         <th role="columnheader">Rol</th>
                         <th role="columnheader">Estado</th>
                         <th role="columnheader">Fecha de alta</th>
-                        <th role="columnheader">Acciones</th>
+                        <th class="columna-acciones" role="columnheader">Acciones</th>
                     </tr>
                 </thead>
                 <tbody role="rowgroup">
@@ -49,22 +49,17 @@
                                     —
                                 {% endif %}
                             </td>
-                            <td role="cell">
+                            <td class="columna-acciones" role="cell">
                                 <div class="acciones-fila">
                                     {% if usuario.estado == "pendiente" %}
                                         <form method="post" action="{{ url_for('admin.aprobar_alta', id_usuario=usuario.id) }}">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <button class="boton boton-compacto" type="submit">Aprobar</button>
                                         </form>
-                                        <details class="acciones-mas">
-                                            <summary class="boton-secundario boton-compacto">Más</summary>
-                                            <div class="acciones-mas-panel">
-                                                <form method="post" action="{{ url_for('admin.rechazar_alta', id_usuario=usuario.id) }}">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                    <button class="boton-peligro boton-compacto" type="submit">Rechazar</button>
-                                                </form>
-                                            </div>
-                                        </details>
+                                        <form method="post" action="{{ url_for('admin.rechazar_alta', id_usuario=usuario.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button class="boton-peligro boton-compacto" type="submit">Rechazar</button>
+                                        </form>
                                     {% elif usuario.estado == "activo" %}
                                         <form method="post" action="{{ url_for('admin.dar_de_baja_usuario', id_usuario=usuario.id) }}">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -85,19 +80,14 @@
                                             <button class="boton-secundario boton-compacto" type="submit">Reconsiderar</button>
                                         </form>
                                         {% if not usuario.es_administrador() %}
-                                            <details class="acciones-mas">
-                                                <summary class="boton-secundario boton-compacto">Más</summary>
-                                                <div class="acciones-mas-panel">
-                                                    <form method="post" action="{{ url_for('admin.eliminar_usuario_rechazado', id_usuario=usuario.id) }}">
-                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                        <label>
-                                                            <input type="checkbox" name="confirmar_borrado" value="si" required>
-                                                            Confirmo la eliminación definitiva
-                                                        </label>
-                                                        <button class="boton-peligro boton-compacto" type="submit">Eliminar definitivamente</button>
-                                                    </form>
-                                                </div>
-                                            </details>
+                                            <form method="post" action="{{ url_for('admin.eliminar_usuario_rechazado', id_usuario=usuario.id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <label>
+                                                    <input type="checkbox" name="confirmar_borrado" value="si" required>
+                                                    Confirmo la eliminación definitiva
+                                                </label>
+                                                <button class="boton-peligro boton-compacto" type="submit">Eliminar definitivamente</button>
+                                            </form>
                                         {% endif %}
                                     {% endif %}
                                 </div>
@@ -108,9 +98,9 @@
             </table>
             </div>
         {% elif hay_filtros %}
-            <p>No se encontraron resultados.</p>
+            <p class="estado-vacio">No se encontraron resultados.</p>
         {% else %}
-            <p>No hay socios para este filtro.</p>
+            <p class="estado-vacio">No hay socios para este filtro.</p>
         {% endif %}
         {% include "_paginacion.html" %}
     </section>

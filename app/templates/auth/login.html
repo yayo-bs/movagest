@@ -2,7 +2,7 @@
    Extiende la estructura común de MovaGest. #}
 {% extends "base.html" %}
 
-{% block titulo %}Entrar | MovaGest{% endblock %}
+{% block titulo %}Entrar · MovaGest{% endblock %}
 
 {% block contenido %}
     <section class="formulario tarjeta">
@@ -12,10 +12,16 @@
             {% for campo in (formulario.email, formulario.password) %}
                 <div class="campo">
                     {{ campo.label }}
-                    {{ campo() }}
-                    {% for error in campo.errors %}
-                        <p class="error">{{ error }}</p>
-                    {% endfor %}
+                    {% if campo.errors %}
+                        {{ campo(**{"aria-invalid": "true", "aria-describedby": "errores-" ~ campo.id}) }}
+                        <div id="errores-{{ campo.id }}">
+                            {% for error in campo.errors %}
+                                <p class="error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ campo() }}
+                    {% endif %}
                 </div>
             {% endfor %}
             {{ formulario.enviar(class_="boton") }}

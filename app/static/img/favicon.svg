@@ -1,0 +1,6 @@
+<!-- Favicon vectorial para identificar MovaGest en las pestañas.
+     Emplea el saffron y el azul marino de la identidad visual. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <rect x="2" y="2" width="60" height="60" rx="8" fill="#FFA601"/>
+    <text x="32" y="46" text-anchor="middle" font-family="system-ui, sans-serif" font-size="42" font-weight="700" fill="#17324D">M</text>
+</svg>

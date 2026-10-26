@@ -3,7 +3,7 @@
 {% extends "base.html" %}
 {% from "_filtros.html" import filtros_listado %}
 
-{% block titulo %}Documentos y actas | MovaGest{% endblock %}
+{% block titulo %}Documentos y actas · MovaGest{% endblock %}
 
 {% block contenido %}
     <section class="tarjeta">
@@ -32,24 +32,26 @@
                         {% if documento.descripcion %}
                             <p>{{ documento.descripcion }}</p>
                         {% endif %}
-                        <a class="boton" href="{{ url_for('documentos.descargar_documento', id_documento=documento.id) }}">Descargar {{ documento.nombre_original }}</a>
-                        {% if current_user.es_administrador() %}
-                            <form method="post" action="{{ url_for('documentos.borrar_documento', id_documento=documento.id) }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <label>
-                                    <input type="checkbox" name="confirmar_borrado" value="si" required>
-                                    Confirmo que quiero eliminar este archivo.
-                                </label>
-                                <button class="boton-peligro" type="submit">Eliminar</button>
-                            </form>
-                        {% endif %}
+                        <div class="acciones-fila">
+                            <a class="boton boton-compacto" href="{{ url_for('documentos.descargar_documento', id_documento=documento.id) }}">Descargar {{ documento.nombre_original }}</a>
+                            {% if current_user.es_administrador() %}
+                                <form method="post" action="{{ url_for('documentos.borrar_documento', id_documento=documento.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <label>
+                                        <input type="checkbox" name="confirmar_borrado" value="si" required>
+                                        Confirmo que quiero eliminar este archivo.
+                                    </label>
+                                    <button class="boton-peligro boton-compacto" type="submit">Eliminar</button>
+                                </form>
+                            {% endif %}
+                        </div>
                     </li>
                 {% endfor %}
             </ul>
         {% elif hay_filtros %}
-            <p>No se encontraron resultados.</p>
+            <p class="estado-vacio">No se encontraron resultados.</p>
         {% else %}
-            <p>No hay archivos en esta categoría.</p>
+            <p class="estado-vacio">No hay archivos en esta categoría.</p>
         {% endif %}
         {% include "_paginacion.html" %}
     </section>

@@ -2,7 +2,7 @@
 {% extends "base.html" %}
 {% from "_filtros.html" import filtros_listado %}
 
-{% block titulo %}Noticias | MovaGest{% endblock %}
+{% block titulo %}Noticias · MovaGest{% endblock %}
 
 {% block contenido %}
     <section class="tarjeta">
@@ -24,9 +24,9 @@
                 {% endfor %}
             </ul>
         {% elif hay_filtros %}
-            <p>No se encontraron resultados.</p>
+            <p class="estado-vacio">No se encontraron resultados.</p>
         {% else %}
-            <p>Todavía no hay noticias publicadas.</p>
+            <p class="estado-vacio">Todavía no hay noticias publicadas.</p>
         {% endif %}
         {% include "_paginacion.html" %}
     </section>

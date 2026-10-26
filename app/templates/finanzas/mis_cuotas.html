@@ -2,7 +2,7 @@
 {% extends "base.html" %}
 {% from "_componentes.html" import etiqueta_estado %}
 
-{% block titulo %}Mis cuotas | MovaGest{% endblock %}
+{% block titulo %}Mis cuotas · MovaGest{% endblock %}
 
 {% block contenido %}
     <section class="tarjeta">
@@ -45,7 +45,7 @@
             </table>
             </div>
         {% else %}
-            <p>Aún no tienes cuotas registradas.</p>
+            <p class="estado-vacio">Aún no tienes cuotas registradas.</p>
         {% endif %}
     </section>
 {% endblock %}

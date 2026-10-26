@@ -6,7 +6,9 @@
     <script>document.documentElement.classList.add("js");</script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block titulo %}MovaGest{% endblock %}</title>
+    <meta name="theme-color" content="#17324D">
+    <title>{% block titulo %}Inicio · MovaGest{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
@@ -14,6 +16,7 @@
     <script src="{{ url_for('static', filename='js/navegacion.js') }}" defer></script>
 </head>
 <body>
+    <a class="enlace-salto" href="#contenido-principal">Saltar al contenido</a>
     <header class="cabecera">
         <a class="marca" href="{% if current_user.is_authenticated %}{{ url_for('main.inicio') }}{% else %}{{ url_for('main.home_publica') }}{% endif %}">MovaGest</a>
         <button class="boton-menu" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="navegacion-principal">
@@ -61,12 +64,12 @@
         </nav>
     </header>
 
-    <main class="contenido">
+    <main class="contenido" id="contenido-principal" tabindex="-1">
         {% with mensajes = get_flashed_messages(with_categories=true) %}
             {% if mensajes %}
                 <section aria-label="Mensajes">
                     {% for categoria, mensaje in mensajes %}
-                        <p class="mensaje {{ categoria }}">{{ mensaje }}</p>
+                        <p class="mensaje {{ categoria }}" role="{% if categoria in ('error', 'danger', 'peligro') %}alert{% else %}status{% endif %}">{{ mensaje }}</p>
                     {% endfor %}
                 </section>
             {% endif %}
@@ -74,5 +77,6 @@
 
         {% block contenido %}{% endblock %}
     </main>
+    <footer class="pie-pagina">MovaGest · {{ anio_actual() }}</footer>
 </body>
 </html>

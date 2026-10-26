@@ -3,7 +3,7 @@
 {% extends "base.html" %}
 {% from "_componentes.html" import etiqueta_estado %}
 
-{% block titulo %}{{ taller.titulo }} | Talleres{% endblock %}
+{% block titulo %}{{ taller.titulo }} · MovaGest{% endblock %}
 
 {% block contenido %}
     <article class="tarjeta">
@@ -39,15 +39,17 @@
     {% if current_user.es_administrador() %}
         <section class="tarjeta taller-gestion">
             <h2>Gestión</h2>
-            <p><a class="boton-secundario" href="{{ url_for('talleres.editar_taller', id_taller=taller.id) }}">Editar taller</a></p>
-            <form method="post" action="{{ url_for('talleres.borrar_taller', id_taller=taller.id) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <label>
-                    <input type="checkbox" name="confirmar_borrado" value="si" required>
-                    Confirmo que quiero eliminar este taller.
-                </label>
-                <button class="boton-peligro" type="submit">Eliminar taller</button>
-            </form>
+            <div class="acciones-fila">
+                <a class="boton-secundario boton-compacto" href="{{ url_for('talleres.editar_taller', id_taller=taller.id) }}">Editar taller</a>
+                <form method="post" action="{{ url_for('talleres.borrar_taller', id_taller=taller.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label>
+                        <input type="checkbox" name="confirmar_borrado" value="si" required>
+                        Confirmo que quiero eliminar este taller.
+                    </label>
+                    <button class="boton-peligro boton-compacto" type="submit">Eliminar taller</button>
+                </form>
+            </div>
             <h2>Socios inscritos</h2>
             {% if taller.inscripciones %}
                 <ul>
@@ -56,7 +58,7 @@
                     {% endfor %}
                 </ul>
             {% else %}
-                <p>Aún no hay socios inscritos.</p>
+                <p class="estado-vacio">Aún no hay socios inscritos.</p>
             {% endif %}
         </section>
     {% endif %}
