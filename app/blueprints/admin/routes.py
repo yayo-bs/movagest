@@ -14,14 +14,69 @@ from flask import (
     request,
     url_for,
 )
-from flask_login import current_user
+from flask_login import current_user, login_required
 
 from app.blueprints.admin import bp
 from app.decoradores import solo_administradores
 from app.extensiones import db
-from app.models import Inscripcion, Taller, Usuario
+from app.models import Actividad, Inscripcion, Taller, Usuario
 from app.utilidades.actividad import registrar
 from app.utilidades.listados import paginar_consulta, preparar_listado
+
+
+@bp.get("/actividad")
+@solo_administradores
+@login_required
+def listar_actividad():
+    """Muestra el historial de acciones sin permitir modificaciones."""
+    areas = (
+        "socio",
+        "noticia",
+        "documento",
+        "taller",
+        "asamblea",
+        "cuota",
+        "movimiento",
+    )
+    usuarios = db.session.scalars(
+        db.select(Actividad.usuario_nombre)
+        .distinct()
+        .order_by(Actividad.usuario_nombre.asc())
+    ).all()
+    consulta, valores = preparar_listado(
+        db.select(Actividad),
+        request.args,
+        [Actividad.descripcion, Actividad.usuario_nombre],
+        {"fecha": Actividad.fecha},
+        Actividad.fecha.desc(),
+        filtros={
+            "area": {
+                area: Actividad.accion.like(f"{area}.%")
+                for area in areas
+            },
+            "usuario": {
+                nombre: Actividad.usuario_nombre == nombre
+                for nombre in usuarios
+            },
+        },
+    )
+    paginacion = paginar_consulta(
+        consulta,
+        request.args.get("pagina"),
+        current_app.config["POR_PAGINA"],
+    )
+    return render_template(
+        "admin/actividad.html",
+        actividades=paginacion.items,
+        paginacion=paginacion,
+        valores=valores,
+        parametros_paginacion=valores,
+        hay_filtros=bool(
+            valores["q"] or valores["area"] or valores["usuario"]
+        ),
+        areas=areas,
+        usuarios=usuarios,
+    )
 
 
 @bp.get("/altas")

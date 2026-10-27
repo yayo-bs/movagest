@@ -41,6 +41,7 @@
                         <summary>Administración</summary>
                         <div class="menu-panel">
                             <a {% if request.blueprint == "admin" %}aria-current="page" {% endif %}href="{{ url_for('admin.listar_altas') }}">Gestión de socios</a>
+                            <a {% if request.endpoint == "admin.listar_actividad" %}aria-current="page" {% endif %}href="{{ url_for('admin.listar_actividad') }}">Actividad</a>
                             <a {% if request.endpoint == "finanzas.listar_movimientos" %}aria-current="page" {% endif %}href="{{ url_for('finanzas.listar_movimientos') }}">Finanzas</a>
                             <a {% if request.endpoint == "finanzas.listar_cuotas" %}aria-current="page" {% endif %}href="{{ url_for('finanzas.listar_cuotas') }}">Gestionar cuotas</a>
                         </div>

@@ -1,0 +1,69 @@
+{# Historial de acciones administrativas, disponible solo en modo lectura. #}
+{% extends "base.html" %}
+{% from "_filtros.html" import filtros_listado %}
+{% from "_componentes.html" import etiqueta_estado %}
+
+{% block titulo %}Registro de actividad · MovaGest{% endblock %}
+
+{% block contenido %}
+    <section class="tarjeta">
+        <header class="cabecera-pagina">
+            <h1>Registro de actividad</h1>
+        </header>
+
+        {% call filtros_listado(valores, [("fecha", "Fecha")]) %}
+            <label>
+                Área
+                <select name="area">
+                    <option value="" {% if not valores.area %}selected{% endif %}>Todas</option>
+                    {% for area in areas %}
+                        <option value="{{ area }}" {% if valores.area == area %}selected{% endif %}>{{ area|capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                Usuario
+                <select name="usuario">
+                    <option value="" {% if not valores.usuario %}selected{% endif %}>Todos</option>
+                    {% for nombre in usuarios %}
+                        <option value="{{ nombre }}" {% if valores.usuario == nombre %}selected{% endif %}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+        {% endcall %}
+
+        {% if actividades %}
+            <div class="tabla-responsive">
+                <table class="tabla-tarjetas" role="table">
+                    <thead role="rowgroup">
+                        <tr role="row">
+                            <th role="columnheader">Fecha y hora</th>
+                            <th role="columnheader">Usuario</th>
+                            <th role="columnheader">Acción</th>
+                            <th role="columnheader">Descripción</th>
+                        </tr>
+                    </thead>
+                    <tbody role="rowgroup">
+                        {% for actividad in actividades %}
+                            {% set partes_accion = actividad.accion.split(".", 1) %}
+                            <tr role="row">
+                                <td role="cell" data-label="Fecha y hora">{{ actividad.fecha|fecha_es }}</td>
+                                <td role="cell" data-label="Usuario">{{ actividad.usuario_nombre }}</td>
+                                <td role="cell" data-label="Acción">
+                                    {{ etiqueta_estado(partes_accion[0], partes_accion[0]|capitalize) }}
+                                    {{ partes_accion[1]|capitalize if partes_accion|length > 1 else "" }}
+                                </td>
+                                <td role="cell" data-label="Descripción">{{ actividad.descripcion }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif hay_filtros %}
+            <p class="estado-vacio">No hay resultados con estos filtros.</p>
+        {% else %}
+            <p class="estado-vacio">Todavía no hay actividad registrada.</p>
+        {% endif %}
+        {% include "_paginacion.html" %}
+    </section>
+{% endblock %}
