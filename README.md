@@ -103,7 +103,31 @@ Vuelve a ejecutar este comando cuando se añadan tablas nuevas al proyecto.
 flask --app run.py crear-admin
 ```
 
-Este comando solicita nombre, apellidos, email y contraseña del primer usuario administrador.
+Este comando solicita nombre, apellidos, email y contraseña del primer usuario administrador. Es opcional si se va a utilizar únicamente la cuenta administradora de demostración en un entorno local.
+
+7. (Opcional) Carga el conjunto ficticio para revisar las pantallas:
+
+```bash
+flask --app run.py cargar-demo
+```
+
+El orden de inicialización es `init-db`, `crear-admin` (opcional) y `cargar-demo`. No hace falta volver a ejecutar `init-db` para cargar la demo, porque no se añaden tablas.
+
+### Datos de demostración
+
+`cargar-demo` crea usuarios, noticias, documentos PDF, talleres, asambleas y datos financieros ficticios. El comando es idempotente: una segunda ejecución no duplica el contenido. Para borrar y recrear únicamente las filas identificadas como demo y sus PDF:
+
+```bash
+flask --app run.py cargar-demo --reiniciar
+```
+
+La contraseña común es **`Danza-MovaDemo-2026!`**:
+
+- Administrador: `junta@demo.example.com`
+- Administradora: `coordinacion@demo.example.com`
+- Socia: `socia01@demo.example.com`
+
+Estas credenciales son públicas y se deben usar solo en desarrollo o pruebas. Por seguridad, la carga se bloquea con la configuración de producción salvo que se indique expresamente `--forzar`; no uses cuentas ni contraseñas de demostración en un despliegue real.
 
 ## Uso
 

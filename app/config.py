@@ -9,6 +9,7 @@ import os
 class ConfiguracionBase:
     SECRET_KEY = None
     DEBUG = False
+    MODO_PRODUCCION = False
     NOMBRE_ASOCIACION = "MovaGest"
     SQLALCHEMY_DATABASE_URI = "sqlite:///movagest.db"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -42,7 +43,7 @@ class ConfiguracionPruebas(ConfiguracionBase):
 
 
 class ConfiguracionProduccion(ConfiguracionBase):
-    pass
+    MODO_PRODUCCION = True
 
 
 CONFIGURACIONES = {

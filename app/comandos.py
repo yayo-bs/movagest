@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.extensiones import db
 from app.models import Usuario
+from app.demo import comando_cargar_demo
 
 
 @click.command("init-db")
@@ -66,3 +67,4 @@ def registrar_comandos(app):
     """Registra los comandos propios en la aplicación Flask."""
     app.cli.add_command(inicializar_base_datos)
     app.cli.add_command(crear_administrador)
+    app.cli.add_command(comando_cargar_demo)

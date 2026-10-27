@@ -33,53 +33,14 @@ from app.finanzas.formularios import (
     FormularioPagoCuota,
 )
 from app.finanzas.recibos import generar_recibo_pdf
+from app.finanzas.operaciones import (
+    anular_cuota as anular_cuota_operacion,
+    generar_cuotas as crear_cuotas_periodo,
+    marcar_cuota_pagada,
+)
 from app.models import Cuota, Movimiento, Usuario
 from app.utilidades.actividad import registrar
 from app.utilidades.listados import paginar_consulta, preparar_listado
-
-
-def _generar_cuotas(periodo, importe):
-    """Crea una cuota pendiente para cada socio activo que aún no la tenga."""
-    socios = db.session.scalars(
-        db.select(Usuario).where(
-            Usuario.rol == "socio",
-            Usuario.estado == "activo",
-        )
-    ).all()
-    ids_con_cuota = set(
-        db.session.scalars(
-            db.select(Cuota.usuario_id).where(Cuota.periodo == periodo)
-        ).all()
-    )
-    cuotas_nuevas = [
-        Cuota(
-            usuario=socio,
-            periodo=periodo,
-            importe=importe,
-            estado="pendiente",
-        )
-        for socio in socios
-        if socio.id not in ids_con_cuota
-    ]
-    db.session.add_all(cuotas_nuevas)
-    registrar(
-        "cuota.generar",
-        f"Generadas {len(cuotas_nuevas)} cuotas para el periodo {periodo}",
-    )
-    db.session.commit()
-    return len(cuotas_nuevas)
-
-
-def _numero_recibo_siguiente(anio):
-    """Calcula el siguiente número consecutivo para el año indicado."""
-    ultimo_numero = db.session.scalar(
-        db.select(db.func.max(Cuota.numero_recibo)).where(
-            Cuota.numero_recibo.like(f"R-{anio}-%")
-        )
-    )
-    if ultimo_numero is None:
-        return 1
-    return int(ultimo_numero[-4:]) + 1
 
 
 def _sumar_importes(consulta):
@@ -303,10 +264,12 @@ def listar_cuotas():
 def generar_cuotas():
     formulario = FormularioGenerarCuotas()
     if formulario.validate_on_submit():
-        cantidad = _generar_cuotas(
+        cantidad = crear_cuotas_periodo(
             formulario.periodo.data,
             formulario.importe.data,
+            usuario=current_user,
         )
+        db.session.commit()
         flash(f"Se han creado {cantidad} cuotas pendientes.", "success")
         return redirect(url_for("finanzas.listar_cuotas"))
     return render_template(
@@ -347,23 +310,11 @@ def pagar_cuota(id_cuota):
     formulario = FormularioPagoCuota()
     if formulario.validate_on_submit():
         fecha_pago = formulario.fecha_pago.data
-        if cuota.numero_recibo is None:
-            numero = _numero_recibo_siguiente(fecha_pago.year)
-            if numero > 9999:
-                flash(
-                    "No se pueden asignar más recibos para este año.",
-                    "danger",
-                )
-                return redirect(url_for("finanzas.listar_cuotas"))
-            cuota.numero_recibo = f"R-{fecha_pago.year:04d}-{numero:04d}"
-
-        cuota.fecha_pago = fecha_pago
-        cuota.estado = "pagada"
-        registrar(
-            "cuota.pagar",
-            f"Pagada la cuota {cuota.periodo} de {cuota.usuario.nombre} "
-            f"{cuota.usuario.apellidos}".strip(),
-        )
+        try:
+            marcar_cuota_pagada(cuota, fecha_pago, usuario=current_user)
+        except ValueError as error:
+            flash(str(error), "danger")
+            return redirect(url_for("finanzas.listar_cuotas"))
         db.session.commit()
         flash(
             f"La cuota se ha pagado. Recibo {cuota.numero_recibo}.",
@@ -406,12 +357,7 @@ def anular_cuota(id_cuota):
     if cuota.estado != "pagada":
         flash("Solo se pueden anular cuotas pagadas.", "warning")
     else:
-        cuota.estado = "anulada"
-        registrar(
-            "cuota.anular",
-            f"Anulada la cuota {cuota.periodo} de {cuota.usuario.nombre} "
-            f"{cuota.usuario.apellidos}".strip(),
-        )
+        anular_cuota_operacion(cuota, usuario=current_user)
         db.session.commit()
         flash("La cuota se ha anulado y el recibo se conserva.", "success")
     return redirect(url_for("finanzas.listar_cuotas"))
