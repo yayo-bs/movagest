@@ -9,8 +9,10 @@ from app.models.documento import Documento
 from app.models.finanzas import Cuota, Movimiento
 from app.models.usuario import Usuario
 from app.models.taller import Inscripcion, Taller
+from app.models.actividad import Actividad
 
 __all__ = [
+    "Actividad",
     "Asamblea",
     "Cuota",
     "Documento",

@@ -34,6 +34,7 @@ from app.finanzas.formularios import (
 )
 from app.finanzas.recibos import generar_recibo_pdf
 from app.models import Cuota, Movimiento, Usuario
+from app.utilidades.actividad import registrar
 from app.utilidades.listados import paginar_consulta, preparar_listado
 
 
@@ -61,6 +62,10 @@ def _generar_cuotas(periodo, importe):
         if socio.id not in ids_con_cuota
     ]
     db.session.add_all(cuotas_nuevas)
+    registrar(
+        "cuota.generar",
+        f"Generadas {len(cuotas_nuevas)} cuotas para el periodo {periodo}",
+    )
     db.session.commit()
     return len(cuotas_nuevas)
 
@@ -193,6 +198,10 @@ def nuevo_movimiento():
         movimiento = Movimiento()
         _guardar_movimiento(movimiento, formulario)
         db.session.add(movimiento)
+        registrar(
+            "movimiento.crear",
+            f"Creado el movimiento «{movimiento.concepto}»",
+        )
         db.session.commit()
         flash("El movimiento se ha creado correctamente.", "success")
         return redirect(url_for("finanzas.listar_movimientos"))
@@ -210,6 +219,10 @@ def editar_movimiento(id_movimiento):
     formulario = FormularioMovimiento(obj=movimiento)
     if formulario.validate_on_submit():
         _guardar_movimiento(movimiento, formulario)
+        registrar(
+            "movimiento.editar",
+            f"Editado el movimiento «{movimiento.concepto}»",
+        )
         db.session.commit()
         flash("El movimiento se ha actualizado correctamente.", "success")
         return redirect(url_for("finanzas.listar_movimientos"))
@@ -225,6 +238,10 @@ def editar_movimiento(id_movimiento):
 def eliminar_movimiento(id_movimiento):
     movimiento = db.get_or_404(Movimiento, id_movimiento)
     db.session.delete(movimiento)
+    registrar(
+        "movimiento.eliminar",
+        f"Eliminado el movimiento «{movimiento.concepto}»",
+    )
     db.session.commit()
     flash("El movimiento se ha eliminado correctamente.", "success")
     return redirect(url_for("finanzas.listar_movimientos"))
@@ -342,6 +359,11 @@ def pagar_cuota(id_cuota):
 
         cuota.fecha_pago = fecha_pago
         cuota.estado = "pagada"
+        registrar(
+            "cuota.pagar",
+            f"Pagada la cuota {cuota.periodo} de {cuota.usuario.nombre} "
+            f"{cuota.usuario.apellidos}".strip(),
+        )
         db.session.commit()
         flash(
             f"La cuota se ha pagado. Recibo {cuota.numero_recibo}.",
@@ -368,6 +390,10 @@ def eliminar_cuota(id_cuota):
         )
     else:
         db.session.delete(cuota)
+        registrar(
+            "cuota.eliminar",
+            f"Eliminada la cuota pendiente del periodo {cuota.periodo}",
+        )
         db.session.commit()
         flash("La cuota pendiente se ha eliminado.", "success")
     return redirect(url_for("finanzas.listar_cuotas"))
@@ -381,6 +407,11 @@ def anular_cuota(id_cuota):
         flash("Solo se pueden anular cuotas pagadas.", "warning")
     else:
         cuota.estado = "anulada"
+        registrar(
+            "cuota.anular",
+            f"Anulada la cuota {cuota.periodo} de {cuota.usuario.nombre} "
+            f"{cuota.usuario.apellidos}".strip(),
+        )
         db.session.commit()
         flash("La cuota se ha anulado y el recibo se conserva.", "success")
     return redirect(url_for("finanzas.listar_cuotas"))
@@ -397,6 +428,11 @@ def reactivar_cuota(id_cuota):
     else:
         cuota.estado = "pendiente"
         cuota.fecha_pago = None
+        registrar(
+            "cuota.reactivar",
+            f"Reactivada la cuota del periodo {cuota.periodo} "
+            f"de {cuota.usuario.nombre} {cuota.usuario.apellidos}".strip(),
+        )
         db.session.commit()
         flash("La cuota se ha reactivado y conserva su recibo.", "success")
     return redirect(url_for("finanzas.listar_cuotas"))

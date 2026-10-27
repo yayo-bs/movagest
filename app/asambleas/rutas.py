@@ -21,6 +21,7 @@ from app.asambleas.formularios import FormularioAsamblea
 from app.decoradores import solo_administradores
 from app.extensiones import db
 from app.models import Asamblea
+from app.utilidades.actividad import registrar
 from app.utilidades.listados import paginar_consulta, preparar_listado
 
 
@@ -104,6 +105,10 @@ def nueva_asamblea():
         asamblea = Asamblea(autor=current_user)
         _guardar_asamblea(asamblea, formulario)
         db.session.add(asamblea)
+        registrar(
+            "asamblea.crear",
+            f"Creada la convocatoria «{asamblea.titulo}»",
+        )
         db.session.commit()
         flash("La convocatoria se ha creado correctamente.", "success")
         return redirect(url_for("asambleas.ver_asamblea", id_asamblea=asamblea.id))
@@ -123,6 +128,10 @@ def editar_asamblea(id_asamblea):
     )
     if formulario.validate_on_submit():
         _guardar_asamblea(asamblea, formulario)
+        registrar(
+            "asamblea.editar",
+            f"Editada la convocatoria «{asamblea.titulo}»",
+        )
         db.session.commit()
         flash("La convocatoria se ha actualizado correctamente.", "success")
         return redirect(url_for("asambleas.ver_asamblea", id_asamblea=asamblea.id))
@@ -142,7 +151,9 @@ def eliminar_asamblea(id_asamblea):
         return redirect(
             url_for("asambleas.ver_asamblea", id_asamblea=asamblea.id)
         )
+    titulo = asamblea.titulo
     db.session.delete(asamblea)
+    registrar("asamblea.eliminar", f"Eliminada la convocatoria «{titulo}»")
     db.session.commit()
     flash("La convocatoria se ha eliminado correctamente.", "success")
     return redirect(url_for("asambleas.listar_asambleas"))

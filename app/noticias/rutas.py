@@ -18,6 +18,7 @@ from app.extensiones import db
 from app.models import Noticia
 from app.noticias import bp
 from app.noticias.formularios import FormularioNoticia
+from app.utilidades.actividad import registrar
 from app.utilidades.listados import paginar_consulta, preparar_listado
 
 
@@ -67,6 +68,7 @@ def nueva_noticia():
             autor=current_user,
         )
         db.session.add(noticia)
+        registrar("noticia.crear", f"Creada la noticia «{noticia.titulo}»")
         db.session.commit()
         flash("La noticia se ha creado correctamente.", "success")
         return redirect(url_for("noticias.ver_noticia", id_noticia=noticia.id))
@@ -82,6 +84,7 @@ def editar_noticia(id_noticia):
     if formulario.validate_on_submit():
         noticia.titulo = formulario.titulo.data.strip()
         noticia.contenido = formulario.contenido.data.strip()
+        registrar("noticia.editar", f"Editada la noticia «{noticia.titulo}»")
         db.session.commit()
         flash("La noticia se ha actualizado correctamente.", "success")
         return redirect(url_for("noticias.ver_noticia", id_noticia=noticia.id))
@@ -101,7 +104,9 @@ def borrar_noticia(id_noticia):
         flash("Confirma que deseas eliminar esta noticia.", "warning")
         return redirect(url_for("noticias.ver_noticia", id_noticia=noticia.id))
 
+    titulo = noticia.titulo
     db.session.delete(noticia)
+    registrar("noticia.eliminar", f"Eliminada la noticia «{titulo}»")
     db.session.commit()
     flash("La noticia se ha eliminado correctamente.", "success")
     return redirect(url_for("noticias.listar_noticias"))

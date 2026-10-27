@@ -76,6 +76,8 @@ La aplicación usa `app/config.py` para leer estas variables y construir la conf
 flask --app run.py init-db
 ```
 
+Vuelve a ejecutar este comando cuando se añadan tablas nuevas al proyecto.
+
 6. Crea el primer administrador:
 
 ```bash
@@ -145,6 +147,7 @@ movagest/
 │   ├── documentos/              # documentos y actas
 │   ├── finanzas/                # cuotas, movimientos y recibos PDF
 │   ├── models/                  # modelos SQLAlchemy
+│   │   ├── actividad.py
 │   │   ├── asamblea.py
 │   │   ├── documento.py
 │   │   ├── finanzas.py
@@ -170,6 +173,7 @@ movagest/
 │   │   ├── home.html
 │   │   └── ...
 │   └── utilidades/
+│       ├── actividad.py
 │       ├── formatos.py
 │       └── listados.py
 ├── instance/

@@ -22,6 +22,7 @@ from app.models import Inscripcion, Taller
 from app.talleres import bp
 from app.talleres.consultas import filtro_talleres_con_plazas_libres
 from app.talleres.formularios import FormularioTaller
+from app.utilidades.actividad import registrar
 from app.utilidades.listados import paginar_consulta, preparar_listado
 
 
@@ -147,6 +148,7 @@ def nuevo_taller():
         taller = Taller(creado_por=current_user)
         _guardar_taller(taller, formulario)
         db.session.add(taller)
+        registrar("taller.crear", f"Creado el taller «{taller.titulo}»")
         db.session.commit()
         flash("El taller se ha creado correctamente.", "success")
         return redirect(url_for("talleres.ver_taller", id_taller=taller.id))
@@ -168,6 +170,7 @@ def editar_taller(id_taller):
             ]
         elif formulario.validate():
             _guardar_taller(taller, formulario)
+            registrar("taller.editar", f"Editado el taller «{taller.titulo}»")
             db.session.commit()
             flash("El taller se ha actualizado correctamente.", "success")
             return redirect(
@@ -187,7 +190,9 @@ def borrar_taller(id_taller):
     if request.form.get("confirmar_borrado") != "si":
         flash("Confirma que deseas eliminar este taller.", "warning")
         return redirect(url_for("talleres.ver_taller", id_taller=taller.id))
+    titulo = taller.titulo
     db.session.delete(taller)
+    registrar("taller.eliminar", f"Eliminado el taller «{titulo}»")
     db.session.commit()
     flash("El taller se ha eliminado correctamente.", "success")
     return redirect(url_for("talleres.listar_talleres"))

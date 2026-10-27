@@ -20,6 +20,7 @@ from app.blueprints.admin import bp
 from app.decoradores import solo_administradores
 from app.extensiones import db
 from app.models import Inscripcion, Taller, Usuario
+from app.utilidades.actividad import registrar
 from app.utilidades.listados import paginar_consulta, preparar_listado
 
 
@@ -99,6 +100,10 @@ def aprobar_alta(id_usuario):
         flash("La solicitud ya no está pendiente.", "warning")
         return redirect(url_for("admin.listar_altas"))
 
+    registrar(
+        "socio.aprobar",
+        f"Aprobada el alta de {usuario.nombre} {usuario.apellidos}".strip(),
+    )
     db.session.commit()
     flash(f"Se ha aprobado el alta de {usuario.nombre}.", "success")
     return redirect(url_for("admin.listar_altas"))
@@ -114,6 +119,10 @@ def rechazar_alta(id_usuario):
         flash("La solicitud ya no está pendiente.", "warning")
         return redirect(url_for("admin.listar_altas"))
 
+    registrar(
+        "socio.rechazar",
+        f"Rechazada el alta de {usuario.nombre} {usuario.apellidos}".strip(),
+    )
     db.session.commit()
     flash(f"Se ha rechazado el alta de {usuario.nombre}.", "success")
     return redirect(url_for("admin.listar_altas"))
@@ -155,7 +164,12 @@ def eliminar_usuario_rechazado(id_usuario):
     elif request.form.get("confirmar_borrado") != "si":
         flash("Confirma que deseas eliminar definitivamente a este socio.", "warning")
     else:
+        nombre_usuario = f"{usuario.nombre} {usuario.apellidos}".strip()
         db.session.delete(usuario)
+        registrar(
+            "socio.eliminar",
+            f"Eliminada el alta rechazada de {nombre_usuario}",
+        )
         db.session.commit()
         flash("El socio rechazado se ha eliminado definitivamente.", "success")
         return redirect(url_for("admin.listar_altas"))
@@ -181,6 +195,10 @@ def dar_de_baja_usuario(id_usuario):
         flash("Solo se puede dar de baja a socios activos.", "warning")
     else:
         _cancelar_inscripciones_futuras(usuario)
+        registrar(
+            "socio.baja",
+            f"Se ha dado de baja a {usuario.nombre} {usuario.apellidos}".strip(),
+        )
         db.session.commit()
         flash(f"Se ha dado de baja a {usuario.nombre}.", "success")
         return redirect(url_for("admin.listar_altas"))
@@ -207,6 +225,10 @@ def reactivar_usuario(id_usuario):
         flash("Solo se pueden reactivar socios que estén de baja.", "warning")
         return redirect(url_for("admin.listar_altas"))
 
+    registrar(
+        "socio.reactivar",
+        f"Reactivado {usuario.nombre} {usuario.apellidos}".strip(),
+    )
     db.session.commit()
     flash(f"Se ha reactivado a {usuario.nombre}.", "success")
     return redirect(url_for("admin.listar_altas"))

@@ -24,6 +24,7 @@ from app.documentos import bp
 from app.documentos.formularios import FormularioDocumento
 from app.extensiones import db
 from app.models import Documento
+from app.utilidades.actividad import registrar
 from app.utilidades.listados import paginar_consulta, preparar_listado
 
 
@@ -45,6 +46,11 @@ def _guardar_documento(formulario, usuario):
         subido_por=usuario,
     )
     db.session.add(documento)
+    registrar(
+        "documento.subir",
+        f"Subido el archivo «{documento.titulo}» ({documento.categoria})",
+        usuario=usuario,
+    )
     db.session.commit()
 
 
@@ -56,6 +62,10 @@ def _eliminar_documento(documento):
     if os.path.isfile(ruta_archivo):
         os.remove(ruta_archivo)
     db.session.delete(documento)
+    registrar(
+        "documento.eliminar",
+        f"Eliminado el archivo «{documento.titulo}» ({documento.categoria})",
+    )
     db.session.commit()
 
 
