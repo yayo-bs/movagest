@@ -11,12 +11,7 @@ from flask_login import login_user
 from app.extensiones import db
 from app.models import Actividad, Usuario
 from app.utilidades.actividad import registrar
-
-
-def iniciar_sesion(cliente, usuario):
-    with cliente.session_transaction() as sesion:
-        sesion["_user_id"] = str(usuario.id)
-        sesion["_fresh"] = True
+from tests.conftest import iniciar_sesion
 
 
 def obtener_actividad(accion):
@@ -143,7 +138,7 @@ def test_integracion_documentos_registra_subida(
             "titulo": "Acta archivada",
             "descripcion": "Acta de reunión",
             "categoria": "acta",
-            "archivo": (BytesIO(b"contenido pdf"), "acta.pdf"),
+            "archivo": (BytesIO(b"%PDF-1.4\ncontenido pdf"), "acta.pdf"),
         },
         content_type="multipart/form-data",
     )

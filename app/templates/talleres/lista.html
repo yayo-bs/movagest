@@ -2,7 +2,7 @@
    La administración puede acceder desde aquí a la creación de talleres. #}
 {% extends "base.html" %}
 {% from "_filtros.html" import filtros_listado %}
-{% from "_componentes.html" import etiqueta_estado %}
+{% from "_componentes.html" import etiqueta_estado, estado_vacio %}
 
 {% block titulo %}Talleres · MovaGest{% endblock %}
 
@@ -39,9 +39,9 @@
                 {% endfor %}
             </ul>
         {% elif hay_filtros %}
-            <p class="estado-vacio">No se encontraron resultados.</p>
+            {{ estado_vacio("No se encontraron resultados.") }}
         {% else %}
-            <p class="estado-vacio">No hay talleres publicados.</p>
+            {{ estado_vacio("No hay talleres publicados.") }}
         {% endif %}
         {% include "_paginacion.html" %}
     </section>

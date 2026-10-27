@@ -6,10 +6,20 @@ Cada prueba usa una base de datos en memoria y una carpeta temporal.
 import os
 
 import pytest
+from flask import g, has_app_context
 
 from app import create_app
 from app.extensiones import db
 from app.models import Usuario
+
+
+def iniciar_sesion(cliente, usuario):
+    """Inicia sesión con el cliente y descarta el usuario cacheado de Flask-Login."""
+    if has_app_context():
+        g.pop("_login_user", None)
+    with cliente.session_transaction() as sesion:
+        sesion["_user_id"] = str(usuario.id)
+        sesion["_fresh"] = True
 
 
 @pytest.fixture

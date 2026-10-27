@@ -5,17 +5,9 @@ Cubren permisos, plazas, transiciones de inscripción y operaciones de gestión.
 
 from datetime import datetime, timedelta, timezone
 
-from flask import g
-
 from app.extensiones import db
 from app.models import Inscripcion, Taller
-
-
-def iniciar_sesion(cliente, usuario):
-    g.pop("_login_user", None)
-    with cliente.session_transaction() as sesion:
-        sesion["_user_id"] = str(usuario.id)
-        sesion["_fresh"] = True
+from tests.conftest import iniciar_sesion
 
 
 def crear_taller(usuario, **cambios):

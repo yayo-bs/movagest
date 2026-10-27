@@ -16,3 +16,12 @@
     } %}
     <span class="etiqueta etiqueta-{{ modificadores.get(estado, 'neutro') }}">{{ texto if texto is not none else estado }}</span>
 {% endmacro %}
+
+{% macro estado_vacio(texto, enlace=none, texto_enlace=none) %}
+    <p class="estado-vacio">
+        {{ texto }}
+        {% if enlace %}
+            <a href="{{ enlace }}">{{ texto_enlace }}</a>
+        {% endif %}
+    </p>
+{% endmacro %}

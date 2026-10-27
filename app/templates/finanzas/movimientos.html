@@ -1,6 +1,7 @@
 {# Presenta los movimientos, filtros y resumen económico del periodo. #}
 {% extends "base.html" %}
 {% from "_filtros.html" import filtros_listado %}
+{% from "_componentes.html" import estado_vacio %}
 
 {% block titulo %}Finanzas · MovaGest{% endblock %}
 
@@ -77,7 +78,7 @@
                             <td class="columna-acciones" role="cell">
                                 <div class="acciones-fila">
                                     <a class="boton boton-compacto" href="{{ url_for('finanzas.editar_movimiento', id_movimiento=movimiento.id) }}">Editar</a>
-                                    <form method="post" action="{{ url_for('finanzas.eliminar_movimiento', id_movimiento=movimiento.id) }}">
+                                    <form method="post" data-confirmar="¿Eliminar el movimiento «{{ movimiento.concepto }}»? Esta acción no se puede deshacer." action="{{ url_for('finanzas.eliminar_movimiento', id_movimiento=movimiento.id) }}">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button class="boton-peligro boton-compacto" type="submit">Eliminar</button>
                                     </form>
@@ -89,9 +90,13 @@
             </table>
             </div>
         {% elif hay_filtros %}
-            <p class="estado-vacio">No se encontraron movimientos para este periodo.</p>
+            {{ estado_vacio("No hay resultados con estos filtros.") }}
         {% else %}
-            <p class="estado-vacio">No hay movimientos registrados.</p>
+            {{ estado_vacio(
+                "No hay movimientos registrados para este periodo.",
+                url_for("finanzas.nuevo_movimiento") if current_user.es_administrador() else none,
+                "Crear el primer movimiento"
+            ) }}
         {% endif %}
         {% include "_paginacion.html" %}
     </section>

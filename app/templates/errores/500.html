@@ -1,0 +1,17 @@
+{# Informa de un fallo interno sin revelar detalles técnicos.
+   El enlace de salida lleva al inicio adecuado para la sesión actual. #}
+{% extends "base.html" %}
+
+{% block titulo %}Error interno · MovaGest{% endblock %}
+
+{% block contenido %}
+    <section class="tarjeta">
+        <h1>Error interno</h1>
+        <p>Ha ocurrido un problema. Inténtalo de nuevo más tarde.</p>
+        <p>
+            <a class="boton" href="{% if current_user.is_authenticated %}{{ url_for('main.inicio') }}{% else %}{{ url_for('main.home_publica') }}{% endif %}">
+                Volver al inicio
+            </a>
+        </p>
+    </section>
+{% endblock %}

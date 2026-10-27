@@ -1,7 +1,7 @@
 {# Lista cuotas, filtros y acciones administrativas según su estado. #}
 {% extends "base.html" %}
 {% from "_filtros.html" import filtros_listado %}
-{% from "_componentes.html" import etiqueta_estado %}
+{% from "_componentes.html" import etiqueta_estado, estado_vacio %}
 
 {% block titulo %}Cuotas · MovaGest{% endblock %}
 
@@ -74,7 +74,7 @@
                                                 <summary class="boton-secundario boton-compacto">Más</summary>
                                                 <div class="acciones-mas-panel">
                                                     <a class="boton boton-compacto" href="{{ url_for('finanzas.editar_cuota', id_cuota=cuota.id) }}">Editar importe</a>
-                                                    <form method="post" action="{{ url_for('finanzas.eliminar_cuota', id_cuota=cuota.id) }}">
+                                                    <form method="post" data-confirmar="¿Eliminar la cuota de {{ cuota.usuario.nombre }} {{ cuota.usuario.apellidos }} del periodo {{ cuota.periodo }}? Esta acción no se puede deshacer." action="{{ url_for('finanzas.eliminar_cuota', id_cuota=cuota.id) }}">
                                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                         <button class="boton-peligro boton-compacto" type="submit">Eliminar</button>
                                                     </form>
@@ -84,7 +84,7 @@
                                             <a class="boton boton-compacto" href="{{ url_for('finanzas.editar_cuota', id_cuota=cuota.id) }}">Editar importe</a>
                                         {% endif %}
                                     {% elif cuota.estado == "pagada" %}
-                                        <form method="post" action="{{ url_for('finanzas.anular_cuota', id_cuota=cuota.id) }}">
+                                        <form method="post" data-confirmar="¿Anular la cuota de {{ cuota.usuario.nombre }} {{ cuota.usuario.apellidos }} del periodo {{ cuota.periodo }}? Podrás reactivarla más adelante." action="{{ url_for('finanzas.anular_cuota', id_cuota=cuota.id) }}">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <button class="boton-peligro boton-compacto" type="submit">Anular</button>
                                         </form>
@@ -108,9 +108,9 @@
             </table>
             </div>
         {% elif hay_filtros %}
-            <p class="estado-vacio">No se encontraron cuotas.</p>
+            {{ estado_vacio("No se encontraron cuotas.") }}
         {% else %}
-            <p class="estado-vacio">No hay cuotas registradas.</p>
+            {{ estado_vacio("No hay cuotas registradas.") }}
         {% endif %}
         {% include "_paginacion.html" %}
     </section>

@@ -1,7 +1,7 @@
 {# Historial de acciones administrativas, disponible solo en modo lectura. #}
 {% extends "base.html" %}
 {% from "_filtros.html" import filtros_listado %}
-{% from "_componentes.html" import etiqueta_estado %}
+{% from "_componentes.html" import etiqueta_estado, estado_vacio %}
 
 {% block titulo %}Registro de actividad · MovaGest{% endblock %}
 
@@ -60,9 +60,9 @@
                 </table>
             </div>
         {% elif hay_filtros %}
-            <p class="estado-vacio">No hay resultados con estos filtros.</p>
+            {{ estado_vacio("No hay resultados con estos filtros.") }}
         {% else %}
-            <p class="estado-vacio">Todavía no hay actividad registrada.</p>
+            {{ estado_vacio("Todavía no hay actividad registrada.") }}
         {% endif %}
         {% include "_paginacion.html" %}
     </section>

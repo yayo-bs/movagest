@@ -7,17 +7,10 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from flask import g
 
 from app.extensiones import db
 from app.models import Cuota, Movimiento
-
-
-def iniciar_sesion(cliente, usuario):
-    g.pop("_login_user", None)
-    with cliente.session_transaction() as sesion:
-        sesion["_user_id"] = str(usuario.id)
-        sesion["_fresh"] = True
+from tests.conftest import iniciar_sesion
 
 
 def crear_movimiento(**cambios):

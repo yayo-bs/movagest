@@ -67,6 +67,10 @@ body {
     line-height: var(--interlineado);
 }
 
+.texto-multilinea {
+    white-space: pre-line;
+}
+
 a {
     color: var(--color-primario);
 }

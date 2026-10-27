@@ -6,11 +6,11 @@ Registra extensiones, blueprints y comandos de la aplicación.
 import os
 
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, render_template
 
 load_dotenv()
 
-from app.config import CONFIGURACIONES
+from app.config import CONFIGURACIONES, aplicar_variables_entorno
 from app.extensiones import csrf, db, login_manager
 from app.utilidades.formatos import anio_actual, formato_euros, formato_fecha
 
@@ -33,10 +33,36 @@ def create_app(configuracion=None):
     else:
         app.config.from_object(configuracion)
 
-    if not app.config.get("CARPETA_SUBIDAS"):
-        app.config["CARPETA_SUBIDAS"] = os.path.join(
-            app.instance_path, "subidas"
+    aplicar_variables_entorno(app.config)
+    if not app.config.get("SECRET_KEY") and not app.config.get(
+        "MODO_DESARROLLO"
+    ) and not app.testing:
+        raise RuntimeError(
+            "Falta SECRET_KEY. Define una clave segura en el entorno o en .env "
+            "antes de iniciar la aplicación en producción."
         )
+
+    carpeta_subidas = app.config.get("CARPETA_SUBIDAS") or "subidas"
+    if not os.path.isabs(carpeta_subidas):
+        carpeta_subidas = os.path.join(app.instance_path, carpeta_subidas)
+    app.config["CARPETA_SUBIDAS"] = carpeta_subidas
+
+    ruta_subidas = os.path.realpath(carpeta_subidas)
+    ruta_static = os.path.realpath(app.static_folder)
+    try:
+        dentro_de_static = (
+            os.path.normcase(
+                os.path.commonpath([ruta_subidas, ruta_static])
+            )
+            == os.path.normcase(ruta_static)
+        )
+    except ValueError:
+        dentro_de_static = False
+    if dentro_de_static:
+        raise RuntimeError(
+            "CARPETA_SUBIDAS no puede estar dentro de la carpeta static."
+        )
+
     if not app.testing:
         os.makedirs(app.config["CARPETA_SUBIDAS"], exist_ok=True)
 
@@ -69,5 +95,28 @@ def create_app(configuracion=None):
     app.register_blueprint(finanzas_bp)
     app.register_blueprint(talleres_bp)
     registrar_comandos(app)
+
+    @app.errorhandler(413)
+    def archivo_demasiado_grande(_error):
+        return (
+            render_template(
+                "errores/413.html",
+                maximo_bytes=app.config["MAX_CONTENT_LENGTH"],
+            ),
+            413,
+        )
+
+    @app.errorhandler(403)
+    def pagina_prohibida(_error):
+        return render_template("errores/403.html"), 403
+
+    @app.errorhandler(404)
+    def pagina_no_encontrada(_error):
+        return render_template("errores/404.html"), 404
+
+    @app.errorhandler(500)
+    def error_interno(_error):
+        db.session.rollback()
+        return render_template("errores/500.html"), 500
 
     return app

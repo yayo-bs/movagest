@@ -1,0 +1,17 @@
+{# Informa cuando la dirección solicitada no existe.
+   El enlace de salida lleva al inicio adecuado para la sesión actual. #}
+{% extends "base.html" %}
+
+{% block titulo %}Página no encontrada · MovaGest{% endblock %}
+
+{% block contenido %}
+    <section class="tarjeta">
+        <h1>Página no encontrada</h1>
+        <p>La página que buscas no existe o ya no está disponible.</p>
+        <p>
+            <a class="boton" href="{% if current_user.is_authenticated %}{{ url_for('main.inicio') }}{% else %}{{ url_for('main.home_publica') }}{% endif %}">
+                Volver al inicio
+            </a>
+        </p>
+    </section>
+{% endblock %}

@@ -4,6 +4,7 @@ Solo el equipo administrador puede subir o borrar archivos.
 """
 
 import os
+import zipfile
 from uuid import uuid4
 
 from flask import (
@@ -30,8 +31,9 @@ from app.utilidades.listados import paginar_consulta, preparar_listado
 
 def _guardar_documento(formulario, usuario):
     archivo = formulario.archivo.data
-    nombre_original = secure_filename(archivo.filename)
-    extension = nombre_original.rsplit(".", 1)[1].lower()
+    nombre_original = archivo.filename
+    nombre_seguro = secure_filename(nombre_original or "")
+    extension = nombre_seguro.rsplit(".", 1)[1].lower()
     nombre_archivo = f"{uuid4().hex}.{extension}"
     carpeta = current_app.config["CARPETA_SUBIDAS"]
     os.makedirs(carpeta, exist_ok=True)
@@ -54,13 +56,53 @@ def _guardar_documento(formulario, usuario):
     db.session.commit()
 
 
+def _firma_archivo_valida(archivo, extension):
+    stream = archivo.stream
+    posicion_inicial = stream.tell()
+    try:
+        firma = stream.read(8)
+        if extension == "pdf":
+            return firma.startswith(b"%PDF-")
+        if extension in ("jpg", "jpeg"):
+            return firma.startswith(b"\xff\xd8\xff")
+        if extension == "png":
+            return firma.startswith(b"\x89PNG\r\n\x1a\n")
+        if extension == "doc":
+            return firma.startswith(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1")
+        if extension in ("docx", "odt"):
+            stream.seek(posicion_inicial)
+            with zipfile.ZipFile(stream) as contenedor:
+                archivos = set(contenedor.namelist())
+                if extension == "docx":
+                    return (
+                        "[Content_Types].xml" in archivos
+                        and "word/document.xml" in archivos
+                    )
+                return (
+                    "mimetype" in archivos
+                    and contenedor.read("mimetype")
+                    == b"application/vnd.oasis.opendocument.text"
+                )
+        return False
+    except (zipfile.BadZipFile, KeyError, OSError):
+        return False
+    finally:
+        stream.seek(posicion_inicial)
+
+
 def _eliminar_documento(documento):
     ruta_archivo = os.path.join(
         current_app.config["CARPETA_SUBIDAS"],
         documento.nombre_archivo,
     )
     if os.path.isfile(ruta_archivo):
-        os.remove(ruta_archivo)
+        try:
+            os.remove(ruta_archivo)
+        except OSError:
+            current_app.logger.exception(
+                "No se pudo borrar el archivo físico del documento %s.",
+                documento.id,
+            )
     db.session.delete(documento)
     registrar(
         "documento.eliminar",
@@ -123,6 +165,18 @@ def descargar_documento(id_documento):
 def nuevo_documento():
     formulario = FormularioDocumento()
     if formulario.validate_on_submit():
+        nombre_seguro = secure_filename(
+            formulario.archivo.data.filename or ""
+        )
+        extension = nombre_seguro.rsplit(".", 1)[1].lower()
+        if not _firma_archivo_valida(formulario.archivo.data, extension):
+            formulario.archivo.errors.append(
+                "El contenido no coincide con el tipo de archivo indicado."
+            )
+            return render_template(
+                "documentos/formulario.html",
+                formulario=formulario,
+            )
         _guardar_documento(formulario, current_user)
         flash("El archivo se ha subido correctamente.", "success")
         return redirect(url_for("documentos.listar_documentos"))

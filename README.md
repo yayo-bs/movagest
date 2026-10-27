@@ -60,15 +60,34 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. Configura las variables de entorno. El proyecto carga automáticamente un archivo `.env` si existe. Un ejemplo válido es:
+4. Copia `.env.example` a `.env` y ajusta las variables locales. En PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Flask carga `.env` automáticamente. En desarrollo, estas variables de ejemplo permiten arrancar la aplicación:
 
 ```env
 FLASK_CONFIG=desarrollo
-SECRET_KEY=tu_clave_secreta
+SECRET_KEY=clave-local-de-ejemplo-no-usar-en-produccion
 DATABASE_URL=sqlite:///movagest.db
+NOMBRE_ASOCIACION=MovaGest
+CARPETA_SUBIDAS=subidas
+MAX_CONTENT_LENGTH=10485760
+FLASK_DEBUG=false
+SESSION_COOKIE_SECURE=false
 ```
 
-La aplicación usa `app/config.py` para leer estas variables y construir la configuración. Si no se define ninguna, se aplican valores por defecto para desarrollo.
+`SECRET_KEY` es obligatoria fuera de desarrollo y pruebas; configura allí una clave privada y aleatoria. `DATABASE_URL` usa SQLite local por defecto. `CARPETA_SUBIDAS` se resuelve respecto a `instance/` si es una ruta relativa y no puede apuntar a `static/`. `MAX_CONTENT_LENGTH` indica el máximo de la petición en bytes (10 MiB por defecto). `FLASK_DEBUG` queda desactivada salvo que se active expresamente. Mantén `SESSION_COOKIE_SECURE=false` en desarrollo HTTP y actívala solo al desplegar detrás de HTTPS; las cookies siempre usan `HttpOnly` y `SameSite=Lax`.
+
+Para producción, define `FLASK_CONFIG=produccion`, una `SECRET_KEY` segura y las variables adecuadas para la base de datos y el almacenamiento. No copies la clave de ejemplo a un despliegue real.
+
+Para arrancar en desarrollo desde la raíz del proyecto:
+
+```bash
+python run.py
+```
 
 5. Inicializa la base de datos:
 

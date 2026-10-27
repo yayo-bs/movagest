@@ -1,0 +1,17 @@
+{# Informa de una falta de permisos sin mostrar datos de la ruta protegida.
+   El enlace de salida lleva al inicio adecuado para la sesión actual. #}
+{% extends "base.html" %}
+
+{% block titulo %}Acceso denegado · MovaGest{% endblock %}
+
+{% block contenido %}
+    <section class="tarjeta">
+        <h1>Acceso denegado</h1>
+        <p>No tienes permiso para ver esta página.</p>
+        <p>
+            <a class="boton" href="{% if current_user.is_authenticated %}{{ url_for('main.inicio') }}{% else %}{{ url_for('main.home_publica') }}{% endif %}">
+                Volver al inicio
+            </a>
+        </p>
+    </section>
+{% endblock %}

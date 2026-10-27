@@ -11,12 +11,12 @@
             Publicada {{ noticia.fecha_publicacion|fecha_es }}
             por {{ noticia.autor.nombre }} {{ noticia.autor.apellidos }}
         </p>
-        <div>{{ noticia.contenido | e | replace("\n", "<br>") | safe }}</div>
+        <div class="texto-multilinea">{{ noticia.contenido }}</div>
 
         {% if current_user.es_administrador() %}
             <div class="acciones-fila">
                 <a class="boton-secundario boton-compacto" href="{{ url_for('noticias.editar_noticia', id_noticia=noticia.id) }}">Editar noticia</a>
-                <form method="post" action="{{ url_for('noticias.borrar_noticia', id_noticia=noticia.id) }}">
+                <form method="post" data-confirmar="¿Eliminar la noticia «{{ noticia.titulo }}»? Esta acción no se puede deshacer." action="{{ url_for('noticias.borrar_noticia', id_noticia=noticia.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <label>
                         <input type="checkbox" name="confirmar_borrado" value="si" required>

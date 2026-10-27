@@ -6,17 +6,9 @@ Comprueban autenticación, aislamiento de datos y enlaces según el rol.
 from datetime import date
 from decimal import Decimal
 
-from flask import g
-
 from app.extensiones import db
 from app.models import Cuota
-
-
-def iniciar_sesion(cliente, usuario):
-    g.pop("_login_user", None)
-    with cliente.session_transaction() as sesion:
-        sesion["_user_id"] = str(usuario.id)
-        sesion["_fresh"] = True
+from tests.conftest import iniciar_sesion
 
 
 def crear_cuota(usuario, **cambios):

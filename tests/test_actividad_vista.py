@@ -9,12 +9,7 @@ from flask import g
 
 from app.extensiones import db
 from app.models import Actividad
-
-
-def iniciar_sesion(cliente, usuario):
-    with cliente.session_transaction() as sesion:
-        sesion["_user_id"] = str(usuario.id)
-        sesion["_fresh"] = True
+from tests.conftest import iniciar_sesion
 
 
 def crear_actividad(accion, descripcion, usuario_nombre, fecha=None, usuario=None):

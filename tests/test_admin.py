@@ -10,12 +10,7 @@ from flask import g
 
 from app.extensiones import db
 from app.models import Documento, Inscripcion, Noticia, Taller, Usuario
-
-
-def iniciar_sesion(cliente, usuario):
-    with cliente.session_transaction() as sesion:
-        sesion["_user_id"] = str(usuario.id)
-        sesion["_fresh"] = True
+from tests.conftest import iniciar_sesion
 
 
 def test_socio_recibe_403_en_lista_de_altas(app, cliente, crear_usuario):

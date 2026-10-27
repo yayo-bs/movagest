@@ -41,7 +41,7 @@
             <h2>Gestión</h2>
             <div class="acciones-fila">
                 <a class="boton-secundario boton-compacto" href="{{ url_for('talleres.editar_taller', id_taller=taller.id) }}">Editar taller</a>
-                <form method="post" action="{{ url_for('talleres.borrar_taller', id_taller=taller.id) }}">
+                <form method="post" data-confirmar="¿Eliminar el taller «{{ taller.titulo }}»? Esta acción no se puede deshacer." action="{{ url_for('talleres.borrar_taller', id_taller=taller.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <label>
                         <input type="checkbox" name="confirmar_borrado" value="si" required>

@@ -4,9 +4,12 @@ Cubren el acceso, estados de aprobación y protección de sesión.
 """
 
 import pytest
+from flask import g
 
 from app.extensiones import db
 from app.models import Usuario
+from app.models.usuario import cargar_usuario
+from tests.conftest import iniciar_sesion
 
 
 def datos_registro(**cambios):
@@ -111,18 +114,41 @@ def test_login_bloquea_estado_no_activo(cliente, crear_usuario, estado, mensaje)
 
 
 def test_usuario_con_sesion_activa_pierde_acceso_al_darse_de_baja(
-    cliente, crear_usuario
+    app, cliente, crear_usuario
 ):
     usuario = crear_usuario(estado="activo")
-    cliente.post(
-        "/auth/login",
-        data={"email": usuario.email, "password": "clave-segura-123"},
+    administrador = crear_usuario(
+        email="admin@example.com",
+        rol="administrador",
+        estado="activo",
     )
-    usuario.estado = "baja"
-    db.session.commit()
+    iniciar_sesion(cliente, usuario)
+    cliente_administrador = app.test_client()
+    iniciar_sesion(cliente_administrador, administrador)
+
+    respuesta_baja = cliente_administrador.post(
+        f"/admin/usuarios/{usuario.id}/dar-baja",
+        data={"confirmar_baja": "si"},
+    )
+    g.pop("_login_user", None)
+    respuesta = cliente.get("/inicio")
+
+    assert respuesta_baja.status_code == 302
+    assert db.session.get(Usuario, usuario.id).estado == "baja"
+    assert respuesta.status_code == 302
+    assert "/auth/login" in respuesta.headers["Location"]
+
+
+@pytest.mark.parametrize("estado", ["pendiente", "rechazado"])
+def test_sesion_simulada_de_usuario_no_activo_no_accede(
+    cliente, crear_usuario, estado
+):
+    usuario = crear_usuario(estado=estado)
+    iniciar_sesion(cliente, usuario)
 
     respuesta = cliente.get("/inicio")
 
+    assert cargar_usuario(str(usuario.id)) is None
     assert respuesta.status_code == 302
     assert "/auth/login" in respuesta.headers["Location"]
 

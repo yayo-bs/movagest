@@ -2,7 +2,7 @@
    Los cambios de estado se envían mediante formularios POST con CSRF. #}
 {% extends "base.html" %}
 {% from "_filtros.html" import filtros_listado %}
-{% from "_componentes.html" import etiqueta_estado %}
+{% from "_componentes.html" import etiqueta_estado, estado_vacio %}
 
 {% block titulo %}Gestión de socios · MovaGest{% endblock %}
 
@@ -61,7 +61,7 @@
                                             <button class="boton-peligro boton-compacto" type="submit">Rechazar</button>
                                         </form>
                                     {% elif usuario.estado == "activo" %}
-                                        <form method="post" action="{{ url_for('admin.dar_de_baja_usuario', id_usuario=usuario.id) }}">
+                                        <form method="post" data-confirmar="¿Dar de baja a {{ usuario.nombre }} {{ usuario.apellidos }}? Podrás reactivar su cuenta más adelante." action="{{ url_for('admin.dar_de_baja_usuario', id_usuario=usuario.id) }}">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <label>
                                                 <input type="checkbox" name="confirmar_baja" value="si" required>
@@ -80,7 +80,7 @@
                                             <button class="boton-secundario boton-compacto" type="submit">Reconsiderar</button>
                                         </form>
                                         {% if not usuario.es_administrador() %}
-                                            <form method="post" action="{{ url_for('admin.eliminar_usuario_rechazado', id_usuario=usuario.id) }}">
+                                            <form method="post" data-confirmar="¿Eliminar definitivamente la solicitud de {{ usuario.nombre }} {{ usuario.apellidos }}? Esta acción no se puede deshacer." action="{{ url_for('admin.eliminar_usuario_rechazado', id_usuario=usuario.id) }}">
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                 <label>
                                                     <input type="checkbox" name="confirmar_borrado" value="si" required>
@@ -98,9 +98,9 @@
             </table>
             </div>
         {% elif hay_filtros %}
-            <p class="estado-vacio">No se encontraron resultados.</p>
+            {{ estado_vacio("No se encontraron resultados.") }}
         {% else %}
-            <p class="estado-vacio">No hay socios para este filtro.</p>
+            {{ estado_vacio("No hay socios para este filtro.") }}
         {% endif %}
         {% include "_paginacion.html" %}
     </section>

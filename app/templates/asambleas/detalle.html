@@ -10,13 +10,13 @@
         <p>Asamblea {{ asamblea.tipo }} · {{ asamblea.fecha_hora|fecha_es }}</p>
         <p>Lugar: {{ asamblea.lugar }}</p>
         <h2>Orden del día</h2>
-        <div>{{ asamblea.orden_del_dia | e | replace("\n", "<br>" | safe) | safe }}</div>
+        <div class="texto-multilinea">{{ asamblea.orden_del_dia }}</div>
         <p>Publicada {{ asamblea.fecha_publicacion|fecha_es }}</p>
 
         {% if current_user.es_administrador() %}
             <div class="acciones-fila">
                 <a class="boton-secundario boton-compacto" href="{{ url_for('asambleas.editar_asamblea', id_asamblea=asamblea.id) }}">Editar convocatoria</a>
-                <form method="post" action="{{ url_for('asambleas.eliminar_asamblea', id_asamblea=asamblea.id) }}">
+                <form method="post" data-confirmar="¿Eliminar la convocatoria «{{ asamblea.titulo }}»? Esta acción no se puede deshacer." action="{{ url_for('asambleas.eliminar_asamblea', id_asamblea=asamblea.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <label>
                         <input type="checkbox" name="confirmar_eliminacion" value="si" required>

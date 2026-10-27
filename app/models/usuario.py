@@ -104,4 +104,8 @@ def cargar_usuario(id_usuario):
     except (TypeError, ValueError):
         return None
 
-    return db.session.get(Usuario, id_numerico)
+    usuario = db.session.get(Usuario, id_numerico)
+    if usuario is None or not usuario.esta_activo():
+        return None
+
+    return usuario

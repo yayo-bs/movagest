@@ -1,6 +1,6 @@
 {# Muestra las cuotas de la persona autenticada y sus recibos disponibles. #}
 {% extends "base.html" %}
-{% from "_componentes.html" import etiqueta_estado %}
+{% from "_componentes.html" import etiqueta_estado, estado_vacio %}
 
 {% block titulo %}Mis cuotas · MovaGest{% endblock %}
 
@@ -45,7 +45,7 @@
             </table>
             </div>
         {% else %}
-            <p class="estado-vacio">Aún no tienes cuotas registradas.</p>
+            {{ estado_vacio("Aún no tienes cuotas registradas.") }}
         {% endif %}
     </section>
 {% endblock %}

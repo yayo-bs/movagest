@@ -7,12 +7,7 @@ from datetime import datetime, timedelta, timezone
 
 from app.extensiones import db
 from app.models import Noticia
-
-
-def iniciar_sesion(cliente, usuario):
-    with cliente.session_transaction() as sesion:
-        sesion["_user_id"] = str(usuario.id)
-        sesion["_fresh"] = True
+from tests.conftest import iniciar_sesion
 
 
 def crear_noticia(autor, titulo="Noticia", contenido="Contenido"):

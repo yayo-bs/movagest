@@ -9,12 +9,7 @@ import pytest
 
 from app.extensiones import db
 from app.models import Asamblea, Documento, Inscripcion, Noticia, Taller
-
-
-def iniciar_sesion(cliente, usuario):
-    with cliente.session_transaction() as sesion:
-        sesion["_user_id"] = str(usuario.id)
-        sesion["_fresh"] = True
+from tests.conftest import iniciar_sesion
 
 
 def fecha_futura(dias=2):

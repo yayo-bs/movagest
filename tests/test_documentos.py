@@ -8,12 +8,7 @@ import os
 
 from app.extensiones import db
 from app.models import Documento
-
-
-def iniciar_sesion(cliente, usuario):
-    with cliente.session_transaction() as sesion:
-        sesion["_user_id"] = str(usuario.id)
-        sesion["_fresh"] = True
+from tests.conftest import iniciar_sesion
 
 
 def crear_documento(
@@ -47,7 +42,7 @@ def datos_subida(nombre="informe.pdf", categoria="documento"):
         "titulo": "Informe",
         "descripcion": "Archivo de prueba",
         "categoria": categoria,
-        "archivo": (BytesIO(b"contenido del PDF"), nombre),
+        "archivo": (BytesIO(b"%PDF-1.4\ncontenido del PDF"), nombre),
     }
 
 
@@ -188,7 +183,8 @@ def test_archivo_supera_limite_muestra_mensaje_claro(
     )
 
     assert respuesta.status_code == 413
-    assert "El archivo supera el tamaño máximo permitido de 10 MB.".encode() in respuesta.data
+    assert b"Archivo demasiado grande" in respuesta.data
+    assert "límite configurado de 64 bytes".encode() in respuesta.data
 
 
 def test_filtro_por_categoria(cliente, crear_usuario, app):
@@ -272,6 +268,34 @@ def test_borrar_elimina_registro_y_archivo(app, cliente, crear_usuario):
     assert not os.path.exists(ruta_archivo)
 
 
+def test_fallo_al_borrar_archivo_no_impide_eliminar_registro(
+    app, cliente, crear_usuario, monkeypatch
+):
+    administrador = crear_usuario(
+        email="admin@example.com",
+        rol="administrador",
+        estado="activo",
+    )
+    documento = crear_documento(app, administrador, "Informe", "documento")
+    ruta_archivo = os.path.join(
+        app.config["CARPETA_SUBIDAS"], documento.nombre_archivo
+    )
+    iniciar_sesion(cliente, administrador)
+
+    def fallar_al_borrar(_ruta):
+        raise PermissionError("sin permiso")
+
+    monkeypatch.setattr("app.documentos.rutas.os.remove", fallar_al_borrar)
+    respuesta = cliente.post(
+        f"/documentos/{documento.id}/borrar",
+        data={"confirmar_borrado": "si"},
+    )
+
+    assert respuesta.status_code == 302
+    assert db.session.get(Documento, documento.id) is None
+    assert os.path.exists(ruta_archivo)
+
+
 def test_descarga_de_id_inexistente_devuelve_404(cliente, crear_usuario):
     socio = crear_usuario(email="socio@example.com", estado="activo")
     iniciar_sesion(cliente, socio)
@@ -296,7 +320,10 @@ def test_subidas_mismo_nombre_original_no_se_sobrescriben(
                 "titulo": titulo,
                 "descripcion": "",
                 "categoria": "documento",
-                "archivo": (BytesIO(titulo.encode()), "informe.pdf"),
+                "archivo": (
+                    BytesIO(b"%PDF-1.4\n" + titulo.encode()),
+                    "informe.pdf",
+                ),
             },
             content_type="multipart/form-data",
         )

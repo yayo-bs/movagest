@@ -9,12 +9,7 @@ import pytest
 
 from app.extensiones import db
 from app.models import Asamblea
-
-
-def iniciar_sesion(cliente, usuario):
-    with cliente.session_transaction() as sesion:
-        sesion["_user_id"] = str(usuario.id)
-        sesion["_fresh"] = True
+from tests.conftest import iniciar_sesion
 
 
 def datos_asamblea(**cambios):
@@ -302,7 +297,10 @@ def test_detalle_conserva_saltos_de_linea(cliente, crear_usuario):
     respuesta = cliente.get(f"/asambleas/{asamblea.id}")
 
     assert respuesta.status_code == 200
-    assert b"Primer punto<br>Segundo punto" in respuesta.data
+    assert (
+        b'class="texto-multilinea">Primer punto\nSegundo punto</div>'
+        in respuesta.data
+    )
 
 
 def test_modelo_rechaza_tipo_no_permitido():

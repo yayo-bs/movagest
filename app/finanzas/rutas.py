@@ -185,7 +185,7 @@ def listar_movimientos():
         valores=valores,
         parametros_paginacion=valores,
         hay_filtros=bool(
-            valores["q"] or valores["tipo"] or valores["anio"]
+            valores["q"] or valores["tipo"] or request.args.get("anio")
         ),
     )
 

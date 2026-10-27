@@ -1,6 +1,7 @@
 {# Permite buscar y ordenar noticias; las modificaciones siguen siendo administrativas. #}
 {% extends "base.html" %}
 {% from "_filtros.html" import filtros_listado %}
+{% from "_componentes.html" import estado_vacio %}
 
 {% block titulo %}Noticias · MovaGest{% endblock %}
 
@@ -24,9 +25,9 @@
                 {% endfor %}
             </ul>
         {% elif hay_filtros %}
-            <p class="estado-vacio">No se encontraron resultados.</p>
+            {{ estado_vacio("No se encontraron resultados.") }}
         {% else %}
-            <p class="estado-vacio">Todavía no hay noticias publicadas.</p>
+            {{ estado_vacio("Todavía no hay noticias publicadas.") }}
         {% endif %}
         {% include "_paginacion.html" %}
     </section>

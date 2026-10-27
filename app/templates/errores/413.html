@@ -1,0 +1,17 @@
+{# Informa que la petición supera el límite de tamaño configurado.
+   La persona puede volver al formulario para seleccionar un archivo menor. #}
+{% extends "base.html" %}
+
+{% block titulo %}Archivo demasiado grande · MovaGest{% endblock %}
+
+{% block contenido %}
+    <section class="tarjeta">
+        <h1>Archivo demasiado grande</h1>
+        <p>La subida supera el límite configurado de {{ maximo_bytes }} bytes.</p>
+        <p>
+            <a class="boton-secundario" href="{{ url_for('documentos.nuevo_documento') }}">
+                Volver al formulario
+            </a>
+        </p>
+    </section>
+{% endblock %}

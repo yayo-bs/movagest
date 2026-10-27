@@ -2,6 +2,7 @@
    Las acciones de subida y borrado aparecen solo para administradores. #}
 {% extends "base.html" %}
 {% from "_filtros.html" import filtros_listado %}
+{% from "_componentes.html" import estado_vacio %}
 
 {% block titulo %}Documentos y actas · MovaGest{% endblock %}
 
@@ -35,7 +36,7 @@
                         <div class="acciones-fila">
                             <a class="boton boton-compacto" href="{{ url_for('documentos.descargar_documento', id_documento=documento.id) }}">Descargar {{ documento.nombre_original }}</a>
                             {% if current_user.es_administrador() %}
-                                <form method="post" action="{{ url_for('documentos.borrar_documento', id_documento=documento.id) }}">
+                                <form method="post" data-confirmar="¿Eliminar {% if documento.categoria == 'acta' %}el acta{% else %}el documento{% endif %} «{{ documento.titulo }}»? Esta acción no se puede deshacer." action="{{ url_for('documentos.borrar_documento', id_documento=documento.id) }}">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <label>
                                         <input type="checkbox" name="confirmar_borrado" value="si" required>
@@ -49,9 +50,9 @@
                 {% endfor %}
             </ul>
         {% elif hay_filtros %}
-            <p class="estado-vacio">No se encontraron resultados.</p>
+            {{ estado_vacio("No se encontraron resultados.") }}
         {% else %}
-            <p class="estado-vacio">No hay archivos en esta categoría.</p>
+            {{ estado_vacio("No hay archivos en esta categoría.") }}
         {% endif %}
         {% include "_paginacion.html" %}
     </section>

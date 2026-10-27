@@ -8,6 +8,13 @@ const gruposMenu = document.querySelectorAll(".menu-grupo");
 const menusAcciones = document.querySelectorAll(".acciones-mas");
 const vistaMovil = window.matchMedia("(max-width: 47.999rem)");
 
+document.addEventListener("submit", (evento) => {
+    const formulario = evento.target.closest("form[data-confirmar]");
+    if (formulario && !window.confirm(formulario.dataset.confirmar)) {
+        evento.preventDefault();
+    }
+});
+
 function cerrarDesplegables(excepto) {
     gruposMenu.forEach((grupo) => {
         if (grupo !== excepto) {
