@@ -17,11 +17,14 @@ La aplicación sigue el patrón de Application Factory con blueprints, usa SQLit
 - CRUD de talleres con control de aforo y cancelación de inscripciones.
 - Módulo de finanzas con cuotas, movimientos de ingresos/gastos y generación de recibos PDF.
 - Registro de la cuenta de la asociación y comprobación de totales por año.
+- Registro de actividad visible para administradores.
+- Gestión de socios con baja lógica y posibilidad de reactivación.
+- Búsqueda, ordenación, filtrado y paginación en los listados que lo implementan.
 
 ### Roles de usuario
 
 - Socio: puede iniciar sesión, consultar contenido, ver documentos y actas, ver noticias, consultar asambleas y inscribirse en talleres.
-- Administrador: tiene todas las capacidades del socio y además puede crear/editar/eliminar contenido, aprobar altes, gestionar talleres y administrar finanzas.
+- Administrador: tiene todas las capacidades del socio y además puede crear/editar/eliminar contenido, aprobar altas, gestionar talleres y administrar finanzas.
 
 ### Stack tecnológico
 
@@ -29,15 +32,17 @@ La aplicación sigue el patrón de Application Factory con blueprints, usa SQLit
 - Flask-SQLAlchemy + SQLite
 - Flask-Login
 - Flask-WTF
+- python-dotenv
 - ReportLab
 - pytest
 - Jinja2 / HTML / CSS
+- Un único archivo JavaScript propio, `app/static/js/navegacion.js`, para la navegación, sin dependencias.
 
 ## Instalación
 
 ### Requisitos
 
-- Python 3.x con entorno virtual activo.
+- Python 3.14 (desarrollado y probado con 3.14.2).
 - Git y acceso a la terminal del proyecto.
 - Dependencias declaradas en `requirements.txt`.
 
@@ -60,10 +65,13 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. Copia `.env.example` a `.env` y ajusta las variables locales. En PowerShell:
+4. Copia `.env.example` a `.env` y ajusta las variables locales:
 
 ```powershell
+# PowerShell
 Copy-Item .env.example .env
+# Linux/macOS
+cp .env.example .env
 ```
 
 Flask carga `.env` automáticamente. En desarrollo, estas variables de ejemplo permiten arrancar la aplicación:
@@ -81,13 +89,13 @@ SESSION_COOKIE_SECURE=false
 
 `SECRET_KEY` es obligatoria fuera de desarrollo y pruebas; configura allí una clave privada y aleatoria. `DATABASE_URL` usa SQLite local por defecto. `CARPETA_SUBIDAS` se resuelve respecto a `instance/` si es una ruta relativa y no puede apuntar a `static/`. `MAX_CONTENT_LENGTH` indica el máximo de la petición en bytes (10 MiB por defecto). `FLASK_DEBUG` queda desactivada salvo que se active expresamente. Mantén `SESSION_COOKIE_SECURE=false` en desarrollo HTTP y actívala solo al desplegar detrás de HTTPS; las cookies siempre usan `HttpOnly` y `SameSite=Lax`.
 
-Para producción, define `FLASK_CONFIG=produccion`, una `SECRET_KEY` segura y las variables adecuadas para la base de datos y el almacenamiento. No copies la clave de ejemplo a un despliegue real.
-
-Para arrancar en desarrollo desde la raíz del proyecto:
+Genera una clave propia con este comando y copia el resultado en `SECRET_KEY`:
 
 ```bash
-python run.py
+python -c "import secrets; print(secrets.token_hex(32))"
 ```
+
+Para producción, define `FLASK_CONFIG=produccion`, una `SECRET_KEY` segura y las variables adecuadas para la base de datos y el almacenamiento. No copies la clave de ejemplo a un despliegue real.
 
 5. Inicializa la base de datos:
 
@@ -97,7 +105,7 @@ flask --app run.py init-db
 
 Vuelve a ejecutar este comando cuando se añadan tablas nuevas al proyecto.
 
-6. Crea el primer administrador:
+6. (Opcional) Crea el primer administrador:
 
 ```bash
 flask --app run.py crear-admin
@@ -112,6 +120,12 @@ flask --app run.py cargar-demo
 ```
 
 El orden de inicialización es `init-db`, `crear-admin` (opcional) y `cargar-demo`. No hace falta volver a ejecutar `init-db` para cargar la demo, porque no se añaden tablas.
+
+8. Arranca la aplicación desde la raíz del proyecto:
+
+```bash
+python run.py
+```
 
 ### Datos de demostración
 
@@ -133,11 +147,7 @@ Estas credenciales son públicas y se deben usar solo en desarrollo o pruebas. P
 
 ### Ejecutar la aplicación
 
-```bash
-python run.py
-```
-
-La aplicación queda disponible por defecto en:
+Una vez arrancada con el comando del paso 8, la aplicación queda disponible por defecto en:
 
 ```text
 http://127.0.0.1:5000/
@@ -145,15 +155,12 @@ http://127.0.0.1:5000/
 
 ### Rutas principales
 
-- `/` y `/inicio`: portada pública y panel de inicio autenticado.
-- `/registro`: alta de socio con aprobación.
-- `/login` y `/logout`: autenticación.
-- `/altas`: revisión de solicitudes de alta por administración.
-- `/noticias`: listado y detalle de noticias.
-- `/documentos`: listado, descarga y gestión de documentos/actas.
-- `/talleres`: listado, detalle, inscripción y cancelación de talleres.
-- `/asambleas`: acceso a convocatorias y gestión por parte de administración.
-- `/movimientos` y `/cuotas`: finanzas de la asociación.
+Las rutas se contrastaron con `flask --app run.py routes`.
+
+- **Públicas:** `/` (portada), `/auth/registro` (solicitud de alta), `/auth/login` y `/auth/logout` (POST).
+- **Socios (con sesión):** `/inicio`, `/noticias/`, `/documentos/`, `/asambleas/`, `/talleres/`, `/finanzas/mis-cuotas` y `/finanzas/cuotas/<int:id_cuota>/recibo`.
+- **Administradores:** `/admin/altas` (gestión de socios: altas, rechazados y bajas, con filtros por estado), `/admin/actividad`, `/finanzas/cuotas`, `/finanzas/cuotas/generar` y `/finanzas/movimientos`.
+- **Gestión de contenido por administradores:** noticias: `/noticias/nueva`, `/noticias/<int:id_noticia>/editar` y `/noticias/<int:id_noticia>/borrar`; documentos: `/documentos/nuevo` y `/documentos/<int:id_documento>/borrar`; asambleas: `/asambleas/nueva`, `/asambleas/<int:id_asamblea>/editar` y `/asambleas/<int:id_asamblea>/eliminar`; talleres: `/talleres/nuevo`, `/talleres/<int:id_taller>/editar` y `/talleres/<int:id_taller>/borrar`. Las rutas de borrado/eliminación usan POST. No existe actualmente una ruta para editar documentos.
 
 ### Pruebas
 
@@ -175,8 +182,9 @@ pytest tests/test_auth.py -q
 movagest/
 ├── app/
 │   ├── __init__.py              # Application factory y registro de blueprints
-│   ├── comandos.py              # comandos Flask: init-db y crear-admin
-│   ├── config.py                # configuración de desarrollo y testing
+│   ├── comandos.py              # comandos Flask: init-db, crear-admin y cargar-demo
+│   ├── config.py                # configuraciones de desarrollo, pruebas y producción
+│   ├── demo.py                  # carga y reinicio selectivo de datos de demostración
 │   ├── decoradores.py           # protección por rol (solo administradores)
 │   ├── extensiones.py          # db, login_manager y csrf
 │   ├── asambleas/               # módulo de asambleas
@@ -189,6 +197,8 @@ movagest/
 │   │   └── main/
 │   ├── documentos/              # documentos y actas
 │   ├── finanzas/                # cuotas, movimientos y recibos PDF
+│   │   ├── operaciones.py       # operaciones compartidas para cuotas
+│   │   └── recibos.py           # generación de recibos PDF
 │   ├── models/                  # modelos SQLAlchemy
 │   │   ├── actividad.py
 │   │   ├── asamblea.py
@@ -202,6 +212,7 @@ movagest/
 │   │   ├── css/
 │   │   ├── img/
 │   │   └── js/
+│   │       └── navegacion.js    # controles de navegación sin dependencias
 │   ├── talleres/                # talleres e inscripciones
 │   ├── templates/
 │   │   ├── admin/
@@ -224,8 +235,9 @@ movagest/
 │   └── subidas/                 # archivos adjuntos de documentos
 ├── tests/
 │   ├── conftest.py              # fixtures de la app y cliente de pruebas
+│   ├── test_seguridad.py        # pruebas de seguridad y permisos
 │   └── test_*.py                # suite de validación por módulo
-├── .env                         # variables de entorno locales
+├── .env.example                 # ejemplo de variables de entorno
 ├── .gitignore
 ├── pytest.ini
 ├── README.md
